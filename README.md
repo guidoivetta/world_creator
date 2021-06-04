@@ -1,1 +1,1 @@
-# world_creator
+# Authors: Guido Ivetta - Dylan Martin
