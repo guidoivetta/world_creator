@@ -15,8 +15,6 @@ let builderStuff = [];
 let selectName;
 let selectMaterial;
 let selectTool;
-let buttonY;
-let buttonN;
 let buttonExport;
 let mapJSON;
 
@@ -45,11 +43,6 @@ function setup() {
   selectTool.option("del");
   selectTool.option("delFromTo");
   selectTool.changed(submitTool);
-
-  buttonY = createButton("Y");
-  buttonY.mousePressed(applyTool);
-  buttonN = createButton("N");
-  buttonN.mousePressed(cancelTool);
 
   buttonExport = createButton("export");
   buttonExport.mousePressed(exportMap);
