@@ -47,9 +47,9 @@ function setup() {
   selectTool.changed(submitTool);
 
   buttonY = createButton("Y");
-  buttonY.mousePressed(applyToolButton);
+  buttonY.mousePressed(applyTool);
   buttonN = createButton("N");
-  buttonN.mousePressed(cancelToolButton);
+  buttonN.mousePressed(cancelTool);
 
   buttonExport = createButton("export");
   buttonExport.mousePressed(exportMap);
