@@ -18,44 +18,6 @@ class Builder {
     this.cursorY = 0;
   }
 
-  setName(input) {
-    switch (input) {
-      case "place":
-        this.tool = "place";
-        break;
-      case "placeFromTo":
-        this.tool = "placeFromTo";
-        break;
-      case "del":
-        this.tool = "del";
-        this.object.char = "";
-        break;
-      case "delFromTo":
-        this.tool = "delFromTo";
-        this.object.char = "";
-        break;
-      case "y":
-        if (
-          this.tool == "delFromTo" &&
-          this.sel1 != null &&
-          this.sel2 != null
-        ) {
-          this.deleteFromTo();
-        } else if (
-          this.tool == "placeFromTo" &&
-          this.sel1 != null &&
-          this.sel2 != null
-        ) {
-          this.placeFromTo();
-        }
-        break;
-      case "n":
-        this.sel1 = null;
-        this.sel2 = null;
-        break;
-    }
-  }
-
   placeFromTo() {
     let x1;
     let x2;
@@ -92,7 +54,6 @@ class Builder {
         });
       }
     }
-
     this.sel1 = null;
     this.sel2 = null;
   }
@@ -157,17 +118,9 @@ class Builder {
   toolAction(input) {
     switch (input) {
       case true:
-        if (
-          this.tool == "delFromTo" &&
-          this.sel1 != null &&
-          this.sel2 != null
-        ) {
+        if (this.tool == "delFromTo") {
           this.deleteFromTo();
-        } else if (
-          this.tool == "placeFromTo" &&
-          this.sel1 != null &&
-          this.sel2 != null
-        ) {
+        } else if (this.tool == "placeFromTo") {
           this.placeFromTo();
         }
         break;
@@ -179,6 +132,8 @@ class Builder {
   }
 
   updateObject() {
+
+    //Set character according to name
     switch (this.object.name) {
       case "wall":
         this.object.char = "█";
@@ -190,6 +145,7 @@ class Builder {
         this.object.char = "";
         break;
     }
+    //Set color according to material
     switch (this.object.material) {
       case "stone":
         this.object.col = 128;
@@ -203,18 +159,21 @@ class Builder {
     }
   }
 
-  showMouse() {
+  showCursor() {
 
+    //Calculate cursorX and cursorY
     this.cursorX = round(((mouseX - FONT_W / 2) / (FONT_W * MAP_W)) * MAP_W);
     this.cursorY = round(((mouseY - FONT_H / 2) / (FONT_H * MAP_H)) * MAP_H);
 
-    if (this.dragSel2){
+    //If dragging selection, update sel2 to cursor position
+    if (this.dragSel2) {
       this.sel2 = {
         x: this.cursorX - 1,
         y: this.cursorY - 1,
       };
     }
 
+    //Keep cursor within map borders
     if (this.cursorX < 1) {
       this.cursorX = 1;
     } else if (this.cursorX > MAP_W) {
@@ -225,96 +184,73 @@ class Builder {
     } else if (this.cursorY > MAP_H) {
       this.cursorY = MAP_H;
     }
-    if (this.tool == "place") {
-      typewriter.type(
-        this.object.char,
-        this.cursorX - 1,
-        this.cursorY - 1,
-        this.object.col
-      );
-    } else if (this.tool == "placeFromTo") {
-      typewriter.type(
-        this.object.char,
-        this.cursorX - 1,
-        this.cursorY - 1,
-        this.object.col
-      );
-      if (this.sel1 != null) {
-        typewriter.type("*", this.sel1.x, this.sel1.y, this.colDel);
-      }
-      if (this.sel2 != null) {
-        //Draw cursor
-        typewriter.type("*", this.sel2.x, this.sel2.y, this.colDel);
 
-        //Calculate selection rectangle
-        let x1;
-        let y1;
-        let x2;
-        let y2;
-        if (this.sel2.x < this.sel1.x) {
-          x1 = (this.sel1.x + 2) * FONT_W;
-          x2 = (this.sel2.x + 1) * FONT_W;
-        } else {
-          x1 = (this.sel1.x + 1) * FONT_W;
-          x2 = (this.sel2.x + 2) * FONT_W;
+    //Display according to selected tool
+    switch (this.tool) {
+      case "place":
+        typewriter.type(
+          this.object.char,
+          this.cursorX - 1,
+          this.cursorY - 1,
+          this.object.col
+        );
+        break;
+      case "del":
+        typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
+        break;
+      case "placeFromTo":
+        typewriter.type(
+          this.object.char,
+          this.cursorX - 1,
+          this.cursorY - 1,
+          this.object.col
+        );
+        if (this.sel1 != null && this.sel2 != null){
+          this.drawSelection();
         }
-        if (this.sel2.y < this.sel1.y) {
-          y1 = (this.sel1.y + 2) * FONT_H;
-          y2 = (this.sel2.y + 1) * FONT_H;
-        } else {
-          y1 = (this.sel1.y + 1) * FONT_H;
-          y2 = (this.sel2.y + 2) * FONT_H;
+        break;
+      case "delFromTo":
+        typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
+        if (this.sel1 != null && this.sel2 != null){
+          this.drawSelection();
         }
-        let rectW = x2 - x1;
-        let rectH = y2 - y1;
-
-        //Draw selection rectangle
-        push();
-        noStroke();
-        fill(this.colSel);
-        rect(x1, y1, rectW, rectH);
-        pop();
-      }
-    } else if (this.tool == "del") {
-      typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
-    } else if (this.tool == "delFromTo") {
-      typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
-      if (this.sel1 != null) {
-        typewriter.type("*", this.sel1.x, this.sel1.y, this.colDel);
-      }
-      if (this.sel2 != null) {
-        //Draw cursor
-        typewriter.type("*", this.sel2.x, this.sel2.y, this.colDel);
-
-        //Calculate selection rectangle
-        let x1;
-        let y1;
-        let x2;
-        let y2;
-        if (this.sel2.x < this.sel1.x) {
-          x1 = (this.sel1.x + 2) * FONT_W;
-          x2 = (this.sel2.x + 1) * FONT_W;
-        } else {
-          x1 = (this.sel1.x + 1) * FONT_W;
-          x2 = (this.sel2.x + 2) * FONT_W;
-        }
-        if (this.sel2.y < this.sel1.y) {
-          y1 = (this.sel1.y + 2) * FONT_H;
-          y2 = (this.sel2.y + 1) * FONT_H;
-        } else {
-          y1 = (this.sel1.y + 1) * FONT_H;
-          y2 = (this.sel2.y + 2) * FONT_H;
-        }
-        let rectW = x2 - x1;
-        let rectH = y2 - y1;
-
-        //Draw selection rectangle
-        push();
-        noStroke();
-        fill(this.colSel);
-        rect(x1, y1, rectW, rectH);
-        pop();
-      }
+        break;
     }
+  }
+
+  drawSelection() {
+
+    //Draw cursors
+    typewriter.type("*", this.sel1.x, this.sel1.y, this.colDel);
+    typewriter.type("*", this.sel2.x, this.sel2.y, this.colDel);
+
+    //Calculate selection rectangle
+    let x1;
+    let y1;
+    let x2;
+    let y2;
+    if (this.sel2.x < this.sel1.x) {
+      x1 = (this.sel1.x + 2) * FONT_W;
+      x2 = (this.sel2.x + 1) * FONT_W;
+    } else {
+      x1 = (this.sel1.x + 1) * FONT_W;
+      x2 = (this.sel2.x + 2) * FONT_W;
+    }
+    if (this.sel2.y < this.sel1.y) {
+      y1 = (this.sel1.y + 2) * FONT_H;
+      y2 = (this.sel2.y + 1) * FONT_H;
+    } else {
+      y1 = (this.sel1.y + 1) * FONT_H;
+      y2 = (this.sel2.y + 2) * FONT_H;
+    }
+    let rectW = x2 - x1;
+    let rectH = y2 - y1;
+
+    //Draw selection rectangle
+    push();
+    noStroke();
+    fill(this.colSel);
+    rect(x1, y1, rectW, rectH);
+    pop();
   }
 }

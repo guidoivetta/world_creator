@@ -79,10 +79,10 @@ function draw() {
     typewriter.type(blocks[i].char, blocks[i].x, blocks[i].y, blocks[i].col);
   }
 
-  //Show builder mouse
-  builder.showMouse();
+  //Show builder cursor
+  builder.showCursor();
 
-  //Show GUI stuff
+  //Show builder GUI stuff
   for (let i = 0; i < builderStuff.length; i++) {
     typewriter.type(
       builderStuff[i].char,
@@ -93,21 +93,21 @@ function draw() {
   }
 
   //Show blocks from loaded map
-  if (mapJSON) {
-    for (let i = 0; i < mapJSON.blocks.length; i++) {
-      typewriter.type(
-        mapJSON.blocks[i].char,
-        mapJSON.blocks[i].x,
-        mapJSON.blocks[i].y,
-        color(
-          mapJSON.blocks[i].col.levels[0],
-          mapJSON.blocks[i].col.levels[1],
-          mapJSON.blocks[i].col.levels[2],
-          mapJSON.blocks[i].col.levels[3]
-        )
-      );
-    }
-  }
+  // if (mapJSON) {
+  //   for (let i = 0; i < mapJSON.blocks.length; i++) {
+  //     typewriter.type(
+  //       mapJSON.blocks[i].char,
+  //       mapJSON.blocks[i].x,
+  //       mapJSON.blocks[i].y,
+  //       color(
+  //         mapJSON.blocks[i].col.levels[0],
+  //         mapJSON.blocks[i].col.levels[1],
+  //         mapJSON.blocks[i].col.levels[2],
+  //         mapJSON.blocks[i].col.levels[3]
+  //       )
+  //     );
+  //   }
+  // }
 }
 
 function exportMap() {
@@ -116,7 +116,6 @@ function exportMap() {
     items: items,
     entities: entities,
   };
-  let mapToJson = JSON.stringify(map);
   saveJSON(map, "map.json");
 }
 
