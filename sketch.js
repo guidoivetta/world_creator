@@ -188,3 +188,11 @@ function mousePressed() {
     }
   }
 }
+
+function keyPressed() {
+  if (keyCode === ESCAPE) {
+    cancelToolButton();
+  } else if (keyCode === ENTER) {
+    applyToolButton();
+  }
+}
