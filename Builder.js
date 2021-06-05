@@ -116,15 +116,9 @@ class Builder {
       y2 = this.sel1.y;
     }
 
-    for (let i = 0; i < blocks.length; i++) {
-      for (let x = x1; x <= x2; x++) {
-        for (let y = y1; y <= y2; y++) {
-          if (blocks[i].x == x && blocks[i].y == y) {
-            blocks.splice(i, 1);
-          }
-        }
-      }
-    }
+    blocks = blocks.filter((block) => {
+      return block.x < x1 || block.x > x2 || block.y < y1 || block.y > y2;
+    });
 
     this.sel1 = null;
     this.sel2 = null;
