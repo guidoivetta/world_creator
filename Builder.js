@@ -1,4 +1,5 @@
 class Builder {
+
   constructor() {
     this.object = {
       char: "",
@@ -17,6 +18,87 @@ class Builder {
     this.dragSel2 = false;
     this.cursorX = 0;
     this.cursorY = 0;
+  }
+
+  ///***OBJECT***///
+  changeName(input) {
+    this.object.name = input;
+    this.updateObject();
+  }
+
+  changeMaterial(input) {
+    this.object.material = input;
+    this.updateObject();
+  }
+
+  updateObject() {
+
+    //Set character according to name
+    switch (this.object.name) {
+      case "wall":
+        this.object.char = "█";
+        break;
+      case "grass":
+        this.object.char = "░";
+        break;
+      default:
+        this.object.char = "";
+        break;
+    }
+    //Set color according to material
+    switch (this.object.material) {
+      case "stone":
+        this.object.col = 128;
+        break;
+      case "leaf":
+        this.object.col = color(96, 255, 64);
+        break;
+      case "water":
+        this.object.col = color(32, 64, 255);
+        break;
+      case "wood":
+        this.object.col = color(96, 64, 32);
+        break;
+      default:
+        this.object.col = color(255, 0, 0);
+        break;
+    }
+  }
+
+  ///***TOOLS***///
+  changeTool(input) {
+    switch (input) {
+      case "place":
+        this.tool = "place";
+        break;
+      case "placeFromTo":
+        this.tool = "placeFromTo";
+        break;
+      case "del":
+        this.tool = "del";
+        //this.object.char = "";
+        break;
+      case "delFromTo":
+        this.tool = "delFromTo";
+        //this.object.char = "";
+        break;
+    }
+  }
+
+  toolAction(input) {
+    switch (input) {
+      case true:
+        if (this.tool == "delFromTo") {
+          this.deleteFromTo();
+        } else if (this.tool == "placeFromTo") {
+          this.placeFromTo();
+        }
+        break;
+      case false:
+        this.sel1 = null;
+        this.sel2 = null;
+        break;
+    }
   }
 
   placeFromTo() {
@@ -87,79 +169,7 @@ class Builder {
     this.sel2 = null;
   }
 
-  changeName(input) {
-    this.object.name = input;
-    this.updateObject();
-  }
-
-  changeMaterial(input) {
-    this.object.material = input;
-    this.updateObject();
-  }
-
-  changeTool(input) {
-    switch (input) {
-      case "place":
-        this.tool = "place";
-        break;
-      case "placeFromTo":
-        this.tool = "placeFromTo";
-        break;
-      case "del":
-        this.tool = "del";
-        //this.object.char = "";
-        break;
-      case "delFromTo":
-        this.tool = "delFromTo";
-        //this.object.char = "";
-        break;
-    }
-  }
-
-  toolAction(input) {
-    switch (input) {
-      case true:
-        if (this.tool == "delFromTo") {
-          this.deleteFromTo();
-        } else if (this.tool == "placeFromTo") {
-          this.placeFromTo();
-        }
-        break;
-      case false:
-        this.sel1 = null;
-        this.sel2 = null;
-        break;
-    }
-  }
-
-  updateObject() {
-
-    //Set character according to name
-    switch (this.object.name) {
-      case "wall":
-        this.object.char = "█";
-        break;
-      case "grass":
-        this.object.char = "░";
-        break;
-      default:
-        this.object.char = "";
-        break;
-    }
-    //Set color according to material
-    switch (this.object.material) {
-      case "stone":
-        this.object.col = 128;
-        break;
-      case "leaf":
-        this.object.col = color(64, 255, 128);
-        break;
-      default:
-        this.object.col = color(255, 0, 0);
-        break;
-    }
-  }
-
+  ///***GRAPHICS***///
   showCursor() {
 
     //Calculate cursorX and cursorY
@@ -206,13 +216,13 @@ class Builder {
           this.cursorY - 1,
           this.object.col
         );
-        if (this.sel1 != null && this.sel2 != null){
+        if (this.sel1 != null && this.sel2 != null) {
           this.drawSelection();
         }
         break;
       case "delFromTo":
         typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
-        if (this.sel1 != null && this.sel2 != null){
+        if (this.sel1 != null && this.sel2 != null) {
           this.drawSelection();
         }
         break;

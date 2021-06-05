@@ -41,6 +41,8 @@ function setup() {
   selectMaterial = createSelect();
   selectMaterial.option("stone");
   selectMaterial.option("leaf");
+  selectMaterial.option("water");
+  selectMaterial.option("wood");
   selectMaterial.changed(submitMaterial);
 
   //Select tool
