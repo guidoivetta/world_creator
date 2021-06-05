@@ -125,10 +125,10 @@ function submitMaterial() {
 function submitTool() {
   builder.changeTool(selectTool.value());
 }
-function applyToolButton() {
+function applyTool() {
   builder.toolAction(true);
 }
-function cancelToolButton() {
+function cancelTool() {
   builder.toolAction(false);
 }
 
@@ -191,8 +191,8 @@ function mousePressed() {
 
 function keyPressed() {
   if (keyCode === ESCAPE) {
-    cancelToolButton();
+    cancelTool();
   } else if (keyCode === ENTER) {
-    applyToolButton();
+    applyTool();
   }
 }
