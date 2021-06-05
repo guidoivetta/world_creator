@@ -136,20 +136,8 @@ function cancelTool() {
   builder.toolAction(false);
 }
 
-function keyPressed() {
-  let input = typewriter.input.line;
-  if (key.length == 1) {
-    //typewriter.input.line += key;
-  } else if (key == "Backspace") {
-    //typewriter.input.line = input.substring(0,input.length-1);
-  } else if (key == "Enter") {
-    //builder.submit(input);
-    //typewriter.input.line = "";
-  } else if (key == "F2") {
-    print(mapJSON.blocks[0].col.levels[3]);
-  }
-}
 function mousePressed() {
+
   if (mouseY > (MAP_H + 1) * FONT_H) {
     return;
   }
@@ -179,18 +167,16 @@ function mousePressed() {
       }
     }
   } else if (builder.tool == "delFromTo" || builder.tool == "placeFromTo") {
-    if (builder.sel1 == null) {
-      builder.sel1 = {
-        x: builder.cursorX - 1,
-        y: builder.cursorY - 1,
-      };
-    } else {
-      builder.sel2 = {
-        x: builder.cursorX - 1,
-        y: builder.cursorY - 1,
-      };
-    }
+    builder.sel1 = {
+      x: builder.cursorX - 1,
+      y: builder.cursorY - 1,
+    };
+    builder.dragSel2 = true;
   }
+}
+
+function mouseReleased() {
+  builder.dragSel2 = false;
 }
 
 function keyPressed() {
@@ -199,4 +185,15 @@ function keyPressed() {
   } else if (keyCode === ENTER) {
     applyTool();
   }
+  // let input = typewriter.input.line;
+  // if (key.length == 1) {
+  //   typewriter.input.line += key;
+  // } else if (key == "Backspace") {
+  //   typewriter.input.line = input.substring(0,input.length-1);
+  // } else if (key == "Enter") {
+  //   builder.submit(input);
+  //   typewriter.input.line = "";
+  // } else if (key == "F2") {
+  //   print(mapJSON.blocks[0].col.levels[3]);
+  // }
 }

@@ -13,6 +13,7 @@ class Builder {
     this.tool = "place";
     this.sel1 = null;
     this.sel2 = null;
+    this.dragSel2 = false;
     this.cursorX = 0;
     this.cursorY = 0;
   }
@@ -203,8 +204,17 @@ class Builder {
   }
 
   showMouse() {
+
     this.cursorX = round(((mouseX - FONT_W / 2) / (FONT_W * MAP_W)) * MAP_W);
     this.cursorY = round(((mouseY - FONT_H / 2) / (FONT_H * MAP_H)) * MAP_H);
+
+    if (this.dragSel2){
+      this.sel2 = {
+        x: this.cursorX - 1,
+        y: this.cursorY - 1,
+      };
+    }
+
     if (this.cursorX < 1) {
       this.cursorX = 1;
     } else if (this.cursorX > MAP_W) {
