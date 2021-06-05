@@ -1,13 +1,14 @@
 class Builder {
   constructor() {
     this.object = {
-      char: "█",
+      char: "",
       x: 0,
       y: 0,
       name: "wall",
       material: "stone",
-      col: color(255, 0, 0),
+      col: null,
     };
+    this.updateObject();
     this.colDel = color(255, 0, 0, 128);
     this.colSel = color(0, 0, 255, 128);
     this.tool = "place";
@@ -165,14 +166,6 @@ class Builder {
     this.cursorX = round(((mouseX - FONT_W / 2) / (FONT_W * MAP_W)) * MAP_W);
     this.cursorY = round(((mouseY - FONT_H / 2) / (FONT_H * MAP_H)) * MAP_H);
 
-    //If dragging selection, update sel2 to cursor position
-    if (this.dragSel2) {
-      this.sel2 = {
-        x: this.cursorX - 1,
-        y: this.cursorY - 1,
-      };
-    }
-
     //Keep cursor within map borders
     if (this.cursorX < 1) {
       this.cursorX = 1;
@@ -183,6 +176,14 @@ class Builder {
       this.cursorY = 1;
     } else if (this.cursorY > MAP_H) {
       this.cursorY = MAP_H;
+    }
+
+    //If dragging selection, update sel2 to cursor position
+    if (this.dragSel2) {
+      this.sel2 = {
+        x: this.cursorX - 1,
+        y: this.cursorY - 1,
+      };
     }
 
     //Display according to selected tool
