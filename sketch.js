@@ -19,24 +19,31 @@ let buttonExport;
 let mapJSON;
 
 function preload() {
+
+  //Load font
   font = loadFont("assets/codepage437.ttf");
   //mapJSON = loadJSON("assets/map.json");
 }
 
 function setup() {
+
+  //Set up font
   textFont(font);
   textSize(16);
 
+  //Select name
   selectName = createSelect();
   selectName.option("wall");
   selectName.option("grass");
   selectName.changed(submitName);
 
+  //Select material
   selectMaterial = createSelect();
   selectMaterial.option("stone");
   selectMaterial.option("leaf");
   selectMaterial.changed(submitMaterial);
 
+  //Select tool
   selectTool = createSelect();
   selectTool.option("place");
   selectTool.option("placeFromTo");
@@ -44,16 +51,20 @@ function setup() {
   selectTool.option("delFromTo");
   selectTool.changed(submitTool);
 
+  //Button export
   buttonExport = createButton("export");
   buttonExport.mousePressed(exportMap);
 
+  //Create typewriter and builder
   typewriter = new Typewriter();
   builder = new Builder();
 
+  //Set up canvas
   createCanvas(FONT_W * (MAP_W + 2), FONT_H * round(MAP_H * 1.75));
 }
 
 function draw() {
+
   //Clear screen
   background(0);
 
@@ -68,8 +79,8 @@ function draw() {
     typewriter.type(blocks[i].char, blocks[i].x, blocks[i].y, blocks[i].col);
   }
 
-  //Show mouse
-  builder.drawOnMouse();
+  //Show builder mouse
+  builder.showMouse();
 
   //Show GUI stuff
   for (let i = 0; i < builderStuff.length; i++) {
