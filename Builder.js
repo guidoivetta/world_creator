@@ -202,7 +202,7 @@ class Builder {
     }
   }
 
-  drawOnMouse() {
+  showMouse() {
     this.cursorX = round(((mouseX - FONT_W / 2) / (FONT_W * MAP_W)) * MAP_W);
     this.cursorY = round(((mouseY - FONT_H / 2) / (FONT_H * MAP_H)) * MAP_H);
     if (this.cursorX < 1) {
