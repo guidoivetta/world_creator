@@ -191,8 +191,8 @@ function mousePressed() {
     //First check if there's already an obj there, if so delete it
     for (let i = 0; i < blocks.length; i++) {
       if (
-        builder.cursorX - 1 == blocks[i].x &&
-        builder.cursorY - 1 == blocks[i].y
+        builder.cursorX == blocks[i].x &&
+        builder.cursorY == blocks[i].y
       ) {
         print("spliced");
         blocks.splice(i, 1);
@@ -206,8 +206,8 @@ function mousePressed() {
   } else if (builder.tool == "del") {
     for (let i = 0; i < blocks.length; i++) {
       if (
-        builder.cursorX - 1 == blocks[i].x &&
-        builder.cursorY - 1 == blocks[i].y
+        builder.cursorX == blocks[i].x &&
+        builder.cursorY == blocks[i].y
       ) {
         blocks.splice(i, 1);
       }
@@ -216,8 +216,8 @@ function mousePressed() {
     //TOOL: DELFROMTO / PLACEFROMTO
   } else if (builder.tool == "delFromTo" || builder.tool == "placeFromTo") {
     builder.sel1 = {
-      x: builder.cursorX - 1,
-      y: builder.cursorY - 1,
+      x: builder.cursorX,
+      y: builder.cursorY,
     };
     builder.dragSel2 = true;
   }

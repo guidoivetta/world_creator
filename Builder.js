@@ -136,8 +136,8 @@ class Builder {
     //If dragging selection, update sel2 to cursor position
     if (this.dragSel2) {
       this.sel2 = {
-        x: this.cursorX - 1,
-        y: this.cursorY - 1,
+        x: this.cursorX,
+        y: this.cursorY
       };
     }
 
@@ -152,7 +152,7 @@ class Builder {
         );
         break;
       case "del":
-        typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
+        typewriter.type("#", this.cursorX, this.cursorY, this.colDel);
         break;
       case "placeFromTo":
         typewriter.type(
@@ -166,7 +166,7 @@ class Builder {
         }
         break;
       case "delFromTo":
-        typewriter.type("#", this.cursorX - 1, this.cursorY - 1, this.colDel);
+        typewriter.type("#", this.cursorX, this.cursorY, this.colDel);
         if (this.sel1 != null && this.sel2 != null) {
           this.drawSelection();
         }
