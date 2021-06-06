@@ -1,15 +1,8 @@
 class Builder {
 
   constructor() {
-    this.object = {
-      char: "",
-      x: 0,
-      y: 0,
-      name: "wall",
-      material: "stone",
-      col: null,
-    };
-    this.updateObject();
+    this.object = new Obj(0,0,selectType.value,selectMaterial.value);
+    // this.updateObject();
     this.colDel = color(255, 0, 0, 128);
     this.colSel = color(0, 0, 255, 128);
     this.tool = "place";
@@ -18,51 +11,6 @@ class Builder {
     this.dragSel2 = false;
     this.cursorX = 0;
     this.cursorY = 0;
-  }
-
-  ///***OBJECT***///
-  changeName(input) {
-    this.object.name = input;
-    this.updateObject();
-  }
-
-  changeMaterial(input) {
-    this.object.material = input;
-    this.updateObject();
-  }
-
-  updateObject() {
-
-    //Set character according to name
-    switch (this.object.name) {
-      case "wall":
-        this.object.char = "█";
-        break;
-      case "grass":
-        this.object.char = "░";
-        break;
-      default:
-        this.object.char = "";
-        break;
-    }
-    //Set color according to material
-    switch (this.object.material) {
-      case "stone":
-        this.object.col = 128;
-        break;
-      case "leaf":
-        this.object.col = color(96, 255, 64);
-        break;
-      case "water":
-        this.object.col = color(32, 64, 255);
-        break;
-      case "wood":
-        this.object.col = color(96, 64, 32);
-        break;
-      default:
-        this.object.col = color(255, 0, 0);
-        break;
-    }
   }
 
   ///***TOOLS***///
@@ -84,7 +32,6 @@ class Builder {
         break;
     }
   }
-
   toolAction(input) {
     switch (input) {
       case true:
@@ -100,7 +47,6 @@ class Builder {
         break;
     }
   }
-
   placeFromTo() {
     let x1;
     let x2;
@@ -129,18 +75,13 @@ class Builder {
             i--;
           }
         }
-        blocks.push({
-          char: this.object.char,
-          x: x,
-          y: y,
-          col: this.object.col,
-        });
+        let obj = builder.object;
+        blocks.push(new Obj(x,y,obj.type,obj.material));
       }
     }
     this.sel1 = null;
     this.sel2 = null;
   }
-
   deleteFromTo() {
     let x1;
     let x2;
@@ -173,19 +114,23 @@ class Builder {
   showCursor() {
 
     //Calculate cursorX and cursorY
-    this.cursorX = round(((mouseX - FONT_W / 2) / (FONT_W * MAP_W)) * MAP_W);
-    this.cursorY = round(((mouseY - FONT_H / 2) / (FONT_H * MAP_H)) * MAP_H);
+    this.cursorX = round(((mouseX - FONT_W / 2) / (FONT_W * MAP_W)) * MAP_W) - 1;
+    this.cursorY = round(((mouseY - FONT_H / 2) / (FONT_H * MAP_H)) * MAP_H) - 1;
+
+    //Update object x and y
+    this.object.x = this.cursorX;
+    this.object.y = this.cursorY;
 
     //Keep cursor within map borders
-    if (this.cursorX < 1) {
-      this.cursorX = 1;
-    } else if (this.cursorX > MAP_W) {
-      this.cursorX = MAP_W;
+    if (this.cursorX < 0) {
+      this.cursorX = 0;
+    } else if (this.cursorX > MAP_W - 1) {
+      this.cursorX = MAP_W - 1;
     }
-    if (this.cursorY < 1) {
-      this.cursorY = 1;
-    } else if (this.cursorY > MAP_H) {
-      this.cursorY = MAP_H;
+    if (this.cursorY < 0) {
+      this.cursorY = 0;
+    } else if (this.cursorY > MAP_H - 1) {
+      this.cursorY = MAP_H - 1;
     }
 
     //If dragging selection, update sel2 to cursor position
@@ -201,8 +146,8 @@ class Builder {
       case "place":
         typewriter.type(
           this.object.char,
-          this.cursorX - 1,
-          this.cursorY - 1,
+          this.cursorX,
+          this.cursorY,
           this.object.col
         );
         break;
@@ -212,8 +157,8 @@ class Builder {
       case "placeFromTo":
         typewriter.type(
           this.object.char,
-          this.cursorX - 1,
-          this.cursorY - 1,
+          this.object.x,
+          this.object.y,
           this.object.col
         );
         if (this.sel1 != null && this.sel2 != null) {
@@ -228,7 +173,6 @@ class Builder {
         break;
     }
   }
-
   drawSelection() {
 
     //Draw cursors
