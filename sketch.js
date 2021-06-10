@@ -1,24 +1,39 @@
-//Global constants
+///***GLOBAL CONSTANTS***///
 const FONT_W = 9;
 const FONT_H = 12;
 const MAP_W = 49;
 const MAP_H = 21;
 
-//Global variables
+///***GLOBAL VARIABLES***///
+
+//Font and colors
 let font;
+let colors;
+
+//Engine
 let typewriter;
+let pendingUpdate;
 let builder;
-let blocks = [];
+//let mapJSON;
+
+//Map
+let objs = {
+  back: [],
+  middle: [],
+  front: []
+};
 let items = [];
 let entities = [];
-let builderStuff = [];
+let player;
+
+//HTML
+let selectLayer;
 let selectType;
+let typeIsItem;
 let selectMaterial;
+let selectProperty;
 let selectTool;
 let buttonExport;
-let mapJSON;
-let colors;
-let player;
 
 ///***PRELOAD***///
 function preload() {
@@ -36,8 +51,9 @@ function setup() {
   textSize(16);
   colors = {
     error: color(255, 0, 0),
-    stone: 128,
     wooden: color(72, 48, 24),
+    stone: 128,
+    tin: 192,
     golden: color(255, 210, 0),
     dirt: color(64, 48, 41),
     grass: color(32, 75, 32),
@@ -45,31 +61,53 @@ function setup() {
     gravel: color(48, 48, 48),
     leaves_normal: color(16, 128, 16),
     leaves_autumn: color(212, 91, 18),
-    leaves_dark: color(255, 0, 0)
+    leaves_dark: color(128, 80, 212)
   };
 
   //Get select elements
+  selectLayer = document.getElementById("selectLayer");
   selectType = document.getElementById("selectType");
   selectMaterial = document.getElementById("selectMaterial");
+  selectProperty = document.getElementById("selectProperty");
   selectTool = document.getElementById("selectTool");
-
-  //Get button elements
-  buttonExport = document.getElementById("buttonExport");
 
   //Create typewriter, builder and player
   typewriter = new Typewriter();
   builder = new Builder();
   player = new Player(0, 0);
+
+  submitLayer();
   submitType();
+
+  //Get button elements
+  buttonExport = document.getElementById("buttonExport");
 
   //Set up canvas
   createCanvas(FONT_W * (MAP_W + 2), FONT_H * round(MAP_H * 1.75));
 
+  pendingUpdate = true;
 
 }
 
 ///***DRAW***///
 function draw() {
+
+  //Draw map when updated
+  if (pendingUpdate) {
+    update();
+  }
+
+  //Draw mapp all the time (resource intensive, use when world-building)
+  //update();
+
+  //Show builder cursor
+  //builder.showCursor();
+
+}
+
+function update() {
+
+  pendingUpdate = false;
 
   //Clear screen
   background(0);
@@ -77,51 +115,58 @@ function draw() {
   //Draw map borders
   typewriter.drawScreenBorders();
 
-  //Show input text and blinking pointer underscore
-  typewriter.input.show();
+  //Show objs in the back
+  for (let i = 0; i < objs.back.length; i++) {
+    typewriter.type(objs.back[i].char, objs.back[i].x, objs.back[i].y, objs.back[i].col);
+  }
 
-  //Show blocks
-  for (let i = 0; i < blocks.length; i++) {
-    typewriter.type(blocks[i].char, blocks[i].x, blocks[i].y, blocks[i].col);
+  //Show objs in the middle
+  for (let i = 0; i < objs.middle.length; i++) {
+    typewriter.type(objs.middle[i].char, objs.middle[i].x, objs.middle[i].y, objs.middle[i].col);
+  }
+
+  //Show items
+  for (let i = 0; i < items.length; i++) {
+    typewriter.type(items[i].char, items[i].x, items[i].y, items[i].col);
   }
 
   //Show player
   typewriter.type('@', player.x, player.y, player.col);
 
-  //Show builder cursor
-  builder.showCursor();
-
-  //Show builder GUI stuff
-  for (let i = 0; i < builderStuff.length; i++) {
-    typewriter.type(
-      builderStuff[i].char,
-      builderStuff[i].x,
-      builderStuff[i].y,
-      builderStuff[i].col
-    );
+  //Show objs in the front
+  for (let i = 0; i < objs.front.length; i++) {
+    typewriter.type(objs.front[i].char, objs.front[i].x, objs.front[i].y, objs.front[i].col);
   }
 
-  //Show blocks from loaded map
-  // if (mapJSON) {
-  //   for (let i = 0; i < mapJSON.blocks.length; i++) {
-  //     typewriter.type(
-  //       mapJSON.blocks[i].char,
-  //       mapJSON.blocks[i].x,
-  //       mapJSON.blocks[i].y,
-  //       color(
-  //         mapJSON.blocks[i].col.levels[0],
-  //         mapJSON.blocks[i].col.levels[1],
-  //         mapJSON.blocks[i].col.levels[2],
-  //         mapJSON.blocks[i].col.levels[3]
-  //       )
-  //     );
-  //   }
-  // }
+  typewriter.type('@',
+    player.x,
+    player.y,
+    color(player.col.levels[0], player.col.levels[0], player.col.levels[0], 96));
+
+  player.showInventory();
 }
 
 ///***HTML ELEMENTS STUFF***///
+function submitLayer() {
+  switch (selectLayer.value) {
+    case "back":
+      builder.currentLayer = objs.back;
+      break;
+    case "middle":
+      builder.currentLayer = objs.middle;
+      break;
+    case "front":
+      builder.currentLayer = objs.front;
+      break;
+  }
+}
 function submitType() {
+
+
   emptySelect(selectMaterial);
+
+  typeIsItem = document.querySelector('#selectType option:checked').parentElement.label == "equipment";
+
   switch (selectType.value) {
     case "wall":
       addOptionToSelect(selectMaterial, 'stone');
@@ -134,19 +179,34 @@ function submitType() {
       addOptionToSelect(selectMaterial, 'gravel');
       break;
     case "leaves":
-      addOptionToSelect(selectMaterial, 'normal');
-      addOptionToSelect(selectMaterial, 'autumn');
-      addOptionToSelect(selectMaterial, 'dark');
+      addOptionToSelect(selectMaterial, 'leaves_normal');
+      addOptionToSelect(selectMaterial, 'leaves_autumn');
+      addOptionToSelect(selectMaterial, 'leaves_dark');
       break;
     case "chest":
       addOptionToSelect(selectMaterial, 'wooden');
       addOptionToSelect(selectMaterial, 'golden');
+      break;
+    default:
+      if (typeIsItem) {
+        addOptionToSelect(selectMaterial, 'wooden');
+        addOptionToSelect(selectMaterial, 'stone');
+        addOptionToSelect(selectMaterial, 'tin');
+        addOptionToSelect(selectMaterial, 'golden');
+        builder.object.changeType(selectType.value);
+        submitMaterial();
+        return;
+      }
+      break;
   }
   builder.object.changeType(selectType.value);
   submitMaterial();
 }
 function submitMaterial() {
   builder.object.changeMaterial(selectMaterial.value);
+}
+function submitProperty() {
+  builder.object.addProperty(selectProperty.value);
 }
 function submitTool() {
   builder.changeTool(selectTool.value);
@@ -171,7 +231,7 @@ function addOptionToSelect(element, option) {
 }
 function exportMap() {
   let map = {
-    blocks: blocks,
+    objs: objs,
     items: items,
     entities: entities,
   };
@@ -182,34 +242,22 @@ function exportMap() {
 function mousePressed() {
 
   //If mouse is outside the map, dismiss click
-  if (mouseY > (MAP_H + 1) * FONT_H || mouseX > width) {
+  if (mouseX < FONT_W || mouseX > width - FONT_W || mouseY < FONT_H || mouseY > (MAP_H + 1) * FONT_H) {
     return;
   }
-
   //TOOL: PLACE
   if (builder.tool == "place" && builder.object.char != "") {
-    //First check if there's already an obj there, if so delete it
-    for (let i = 0; i < blocks.length; i++) {
-      if (
-        builder.cursorX == blocks[i].x &&
-        builder.cursorY == blocks[i].y
-      ) {
-        print("spliced");
-        blocks.splice(i, 1);
-      }
-    }
-    //Then add new obj
-    let obj = builder.object;
-    blocks.push(new Obj(obj.x,obj.y,obj.type,obj.material));
+
+    builder.place();
 
     //TOOL: DEL
   } else if (builder.tool == "del") {
-    for (let i = 0; i < blocks.length; i++) {
+    for (let i = 0; i < buildercurrentLayer.length; i++) {
       if (
-        builder.cursorX == blocks[i].x &&
-        builder.cursorY == blocks[i].y
+        builder.cursorX == buildercurrentLayer[i].x &&
+        builder.cursorY == buildercurrentLayer[i].y
       ) {
-        blocks.splice(i, 1);
+        builder.currentLayer.splice(i, 1);
       }
     }
 
@@ -227,33 +275,47 @@ function mouseReleased() {
 }
 function keyPressed() {
 
-  //Apply or cancel tool selection
-  if (keyCode === ESCAPE) {
-    cancelTool();
-  } else if (keyCode === ENTER) {
-    applyTool();
+  let moveDir;
+
+  switch (keyCode) {
+    //Apply or cancel tool selection
+    case ESCAPE:
+      cancelTool();
+      return;
+    case ENTER:
+      if (player.isOnInventory) {
+        player.selectItem();
+      }
+      applyTool();
+      return;
+    //Inventory
+    case 73:
+      player.isOnInventory = !player.isOnInventory;
+      player.selectedItem = 0;
+      player.changeSelectedItem();
+      return;
+    //Move player
+    case LEFT_ARROW:
+      moveDir = 'l';
+      break;
+    case RIGHT_ARROW:
+      moveDir = 'r';
+      break;
+    case UP_ARROW:
+      moveDir = 'u';
+      break;
+    case DOWN_ARROW:
+      moveDir = 'd';
+      break;
+    default:
+      return;
   }
 
-  //Move player
-  if (keyCode === LEFT_ARROW) {
-    player.move('l');
-  } else if (keyCode === RIGHT_ARROW) {
-    player.move('r');
-  } else if (keyCode === UP_ARROW) {
-    player.move('u');
-  } else if (keyCode === DOWN_ARROW) {
-    player.move('d');
+  if (player.isOnInventory) {
+    player.changeSelectedItem(moveDir);
+  } else {
+    player.moveAndCollide(moveDir);
+    pendingUpdate = true;
   }
 
-  // let input = typewriter.input.line;
-  // if (key.length == 1) {
-  //   typewriter.input.line += key;
-  // } else if (key == "Backspace") {
-  //   typewriter.input.line = input.substring(0,input.length-1);
-  // } else if (key == "Enter") {
-  //   builder.submit(input);
-  //   typewriter.input.line = "";
-  // } else if (key == "F2") {
-  //   print(mapJSON.blocks[0].col.levels[3]);
-  // }
 }

@@ -1,8 +1,8 @@
 class Builder {
 
   constructor() {
-    this.object = new Obj(0,0,selectType.value,selectMaterial.value);
-    // this.updateObject();
+    this.object = new Obj(0, 0, selectType.value, selectMaterial.value);
+    this.currentLayer;
     this.colDel = color(255, 0, 0, 128);
     this.colSel = color(0, 0, 255, 128);
     this.tool = "place";
@@ -47,6 +47,25 @@ class Builder {
         break;
     }
   }
+  place() {
+    //First check if there's already an obj there, if so delete it
+    for (let i = 0; i < this.currentLayer.length; i++) {
+      if (
+        this.cursorX == this.currentLayer[i].x &&
+        this.cursorY == this.currentLayer[i].y &&
+        !typeIsItem
+      ) {
+        this.currentLayer.splice(i, 1);
+      }
+    }
+    //Then add new obj
+    let objToAdd = this.object;
+    if (typeIsItem) {
+      items.push(new Obj(objToAdd.x, objToAdd.y, objToAdd.category, objToAdd.type, objToAdd.material));
+    } else {
+      this.currentLayer.push(new Obj(objToAdd.x, objToAdd.y, objToAdd.category, objToAdd.type, objToAdd.material));
+    }
+  }
   placeFromTo() {
     let x1;
     let x2;
@@ -69,14 +88,14 @@ class Builder {
 
     for (let x = x1; x <= x2; x++) {
       for (let y = y1; y <= y2; y++) {
-        for (let i = 0; i < blocks.length; i++) {
-          if (x == blocks[i].x && y == blocks[i].y) {
-            blocks.splice(i, 1);
+        for (let i = 0; i < this.currentLayer.length; i++) {
+          if (x == this.currentLayer[i].x && y == this.currentLayer[i].y) {
+            this.currentLayer.splice(i, 1);
             i--;
           }
         }
-        let obj = builder.object;
-        blocks.push(new Obj(x,y,obj.type,obj.material));
+        let objToAdd = builder.object;
+        this.currentLayer.push(new Obj(x, y, objToAdd.category, objToAdd.type, objToAdd.material));
       }
     }
     this.sel1 = null;
@@ -102,9 +121,13 @@ class Builder {
       y2 = this.sel1.y;
     }
 
-    blocks = blocks.filter((block) => {
-      return block.x < x1 || block.x > x2 || block.y < y1 || block.y > y2;
-    });
+    for (let i = 0; i < this.currentLayer.length; i++) {
+      let obj = this.currentLayer[i];
+      if (obj.x >= x1 && obj.x <= x2 && obj.y >= y1 && obj.y <= y2) {
+        this.currentLayer.splice(i, 1);
+        i--;
+      }
+    }
 
     this.sel1 = null;
     this.sel2 = null;
@@ -157,8 +180,8 @@ class Builder {
       case "placeFromTo":
         typewriter.type(
           this.object.char,
-          this.object.x,
-          this.object.y,
+          this.cursorX,
+          this.cursorY,
           this.object.col
         );
         if (this.sel1 != null && this.sel2 != null) {

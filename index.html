@@ -4,11 +4,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>p5.js example</title>
+  <title>world_creator</title>
   <style>
     body {
       padding: 0;
       margin: 0;
+      background-color: black;
+      font-family: 'Courier New', Courier, monospace;
+      color: white;
+      user-select: none;
+    }
+
+    select {
+      padding: 0;
+      margin: 5px;
+      background-color: white;
+      font-family: 'Courier New', Courier, monospace;
+      color: black;
+      border: 0;
+      user-select: none;
+    }
+
+    button {
+      font-family: 'Courier New', Courier, monospace;
+      margin: 5px;
+      background-color: white;
+      color: black;
+      border-color: black;
+      border: 7px;
+      user-select: none;
     }
   </style>
   <script src="./p5/p5.js"></script>
@@ -23,16 +47,37 @@
 <body>
   <main>
   </main>
-  <select id="selectType" onchange="submitType()">
-    <option value="wall">wall</option>
-    <option value="soil">soil</option>
-    <option value="leaves">leaves</option>
-    <option value="liquid">liquid</option>
-    <option value="chest">chest</option>
+  <hr>
+  layer:
+  <select id="selectLayer" onchange="submitLayer()">
+    <option value="back">back</option>
+    <option value="middle">middle</option>
+    <option value="front">front</option>
   </select>
+  <br>
+  type:
+  <select id="selectType" onchange="submitType()">
+    <optgroup label="objects">
+      <option value="wall">wall</option>
+      <option value="soil">soil</option>
+      <option value="leaves">leaves</option>
+      <option value="liquid">liquid</option>
+      <option value="chest">chest</option>
+    </optgroup>
+    <optgroup label="equipment">
+      <option value="pickaxe">pickaxe</option>
+      <option value="axe">axe</option>
+    </optgroup>
+    <optgroup label="entities">
+      <option value=""></option>
+    </optgroup>
+  </select>
+  material:
   <select id="selectMaterial" onchange="submitMaterial()"></select>
+  initial property:
   <select id="selectProperty" onchange="submitProperty()"></select>
   <br>
+  tool:
   <select id="selectTool" onchange="submitTool()">
     <option value="place">place</option>
     <option value="placeFromTo">placeFromTo</option>

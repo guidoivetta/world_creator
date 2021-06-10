@@ -1,86 +1,83 @@
 class Obj {
 
-  constructor(x, y, type, material) {
+  constructor(x, y, category, type, material) {
     this.x = x;
     this.y = y;
+    this.category = category;
     this.type = type;
     this.material = material;
+    this.col = 255;
     this.update();
   }
 
   update() {
-    //Set character and color according to name and material
+
+    this.isCollidable = false;
+    this.name = this.material + " " + this.type;
+
+    //Set character according to name
     switch (this.type) {
       case "wall":
         this.char = "█";
         this.isCollidable = true;
-        switch (this.material) {
-          case "stone":
-            this.col = colors.stone;
-            break;
-          case "wooden":
-            this.col = colors.wooden;
-            break;
-          default:
-            this.col = colors.error;
-            break;
-        }
         break;
       case "soil":
         this.char = "░";
-        switch (this.material) {
-          case "dirt":
-            this.col = colors.dirt;
-            break;
-          case "grass":
-            this.col = colors.grass;
-            break;
-          case "sand":
-            this.col = colors.sand;
-            break;
-          case "gravel":
-            this.col = colors.gravel;
-            break;
-          default:
-            this.col = colors.error;
-            break;
-        }
         break;
       case "leaves":
         this.char = "▒";
-        switch (this.material) {
-          case "normal":
-            this.col = colors.leaves_normal;
-            break;
-          case "autumn":
-            this.col = colors.leaves_autumn;
-            break;
-          case "dark":
-            this.col = colors.leaves_dark;
-            break;
-          default:
-            this.col = colors.error;
-            break;
-        }
         break;
       case "chest":
         this.char = "■";
-        switch (this.material) {
-          case "wooden":
-            this.col = colors.wooden;
-            break;
-          case "golden":
-            this.col = colors.golden;
-            break;
-          default:
-            this.col = colors.error;
-            break;
-        }
+        break;
+      case "pickaxe":
+        this.char = "*";
+        break;
+      case "axe":
+        this.char = "*";
         break;
       default:
         this.char = "?";
         break;
     }
+
+    //Set character according to name
+    switch (this.material) {
+      case "wooden":
+        this.col = colors.wooden;
+        break;
+      case "stone":
+        this.col = colors.stone;
+        break;
+      case "tin":
+        this.col = colors.tin;
+        break;
+      case "golden":
+        this.col = colors.golden;
+        break;
+      case "dirt":
+        this.col = colors.dirt;
+        break;
+      case "grass":
+        this.col = colors.grass;
+        break;
+      case "sand":
+        this.col = colors.sand;
+        break;
+      case "gravel":
+        this.col = colors.gravel;
+        break;
+      case "leaves_normal":
+        this.col = colors.leaves_normal;
+        break;
+      case "leaves_autumn":
+        this.col = colors.leaves_autumn;
+        break;
+      case "leaves_dark":
+        this.col = colors.leaves_dark;
+        break;
+    }
+
   }
   changeType(input) {
     this.type = input;

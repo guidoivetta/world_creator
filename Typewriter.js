@@ -1,30 +1,8 @@
 class Typewriter {
+
   constructor() {
-    this.input = {
-      line: "",
-      pointer: {
-        char: "_",
-        animate: function () {
-          if (frameCount % 28 == 0) {
-            switch (this.char) {
-              case "_":
-                this.char = "";
-                break;
-              case "":
-                this.char = "_";
-                break;
-            }
-          }
-        },
-      },
-      show: function () {
-        for (let i = 0; i < this.line.length; i++) {
-          typewriter.type(this.line[i], 0 + i, MAP_H + 2, 255);
-        }
-        typewriter.type(this.pointer.char, this.line.length, MAP_H + 2, 255);
-        this.pointer.animate();
-      },
-    };
+    this.x = 1;
+    this.y = MAP_H + 2;
   }
 
   type(char, x, y, col) {
