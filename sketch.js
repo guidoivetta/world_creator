@@ -97,17 +97,20 @@ function draw() {
     update();
   }
 
-  //Draw mapp all the time (resource intensive, use when world-building)
-  //update();
-
   //Show builder cursor
-  //builder.showCursor();
+  if (builder.isActive) {
+    builder.showCursor();
+  }
 
 }
 
 function update() {
 
-  pendingUpdate = false;
+  if (!builder.isActive){
+    pendingUpdate = false;
+  }
+
+
 
   //Clear screen
   background(0);
@@ -138,10 +141,10 @@ function update() {
     typewriter.type(objs.front[i].char, objs.front[i].x, objs.front[i].y, objs.front[i].col);
   }
 
-  typewriter.type('@',
-    player.x,
-    player.y,
-    color(player.col.levels[0], player.col.levels[0], player.col.levels[0], 96));
+  let colPlyr = player.col.levels;
+
+  //Show player behind front layer
+  typewriter.type('@', player.x, player.y, color(colPlyr[0], colPlyr[0], colPlyr[0], 96));
 
   player.showInventory();
 }
@@ -242,7 +245,7 @@ function exportMap() {
 function mousePressed() {
 
   //If mouse is outside the map, dismiss click
-  if (mouseX < FONT_W || mouseX > width - FONT_W || mouseY < FONT_H || mouseY > (MAP_H + 1) * FONT_H) {
+  if (mouseX < FONT_W || mouseX > width - FONT_W || mouseY < FONT_H || mouseY > (MAP_H + 1) * FONT_H || !builder.isActive) {
     return;
   }
   //TOOL: PLACE
@@ -278,6 +281,10 @@ function keyPressed() {
   let moveDir;
 
   switch (keyCode) {
+    //Enter / leave  builder
+    case 66:
+      builder.isActive = !builder.isActive;
+      pendingUpdate = true;
     //Apply or cancel tool selection
     case ESCAPE:
       cancelTool();

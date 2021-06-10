@@ -3,6 +3,7 @@ class Builder {
   constructor() {
     this.object = new Obj(0, 0, selectType.value, selectMaterial.value);
     this.currentLayer;
+    this.isActive = false;
     this.colDel = color(255, 0, 0, 128);
     this.colSel = color(0, 0, 255, 128);
     this.tool = "place";
