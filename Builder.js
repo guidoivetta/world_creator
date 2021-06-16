@@ -1,7 +1,7 @@
 class Builder {
 
   constructor() {
-    this.object = new Obj(0, 0, selectType.value, selectMaterial.value);
+    this.object = new Obj();
     this.currentLayer;
     this.isActive = false;
     this.colDel = color(255, 0, 0, 128);
@@ -48,21 +48,32 @@ class Builder {
         break;
     }
   }
+  applyTool() {
+    if (this.tool == "delFromTo") {
+      this.deleteFromTo();
+    } else if (this.tool == "placeFromTo") {
+      this.placeFromTo();
+    }
+  }
+  cancelTool() {
+    this.sel1 = null;
+    this.sel2 = null;
+  }
   place() {
     //First check if there's already an obj there, if so delete it
     for (let i = 0; i < this.currentLayer.length; i++) {
       if (
         this.cursorX == this.currentLayer[i].x &&
         this.cursorY == this.currentLayer[i].y &&
-        !typeIsItem
+        this.object.category != "objects" && this.object.category != "entities"
       ) {
         this.currentLayer.splice(i, 1);
       }
     }
     //Then add new obj
     let objToAdd = this.object;
-    if (typeIsItem) {
-      items.push(new Obj(objToAdd.x, objToAdd.y, objToAdd.category, objToAdd.type, objToAdd.material));
+    if (this.object.category != "objects" && this.object.category != "entities") {
+      items.push(new Item(objToAdd.x, objToAdd.y, objToAdd.category, objToAdd.type, objToAdd.material));
     } else {
       this.currentLayer.push(new Obj(objToAdd.x, objToAdd.y, objToAdd.category, objToAdd.type, objToAdd.material));
     }

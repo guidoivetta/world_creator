@@ -6,16 +6,17 @@ class Obj {
     this.category = category;
     this.type = type;
     this.material = material;
-    this.col = 255;
+    this.col = color(255,0,0);
     this.update();
   }
 
   update() {
 
     this.isCollidable = false;
+
     this.name = this.material + " " + this.type;
 
-    //Set character according to name
+    //Set character according to type
     switch (this.type) {
       case "wall":
         this.char = "█";
@@ -30,18 +31,16 @@ class Obj {
       case "chest":
         this.char = "■";
         break;
-      case "pickaxe":
-        this.char = "*";
-        break;
-      case "axe":
-        this.char = "*";
-        break;
       default:
         this.char = "?";
         break;
     }
 
-    //Set character according to name
+    if (this.category != "objects") {
+      this.isEquippable = true;
+    }
+
+    //Set color and hardness according to material
     switch (this.material) {
       case "wooden":
         this.col = colors.wooden;

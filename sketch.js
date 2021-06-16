@@ -29,7 +29,6 @@ let player;
 //HTML
 let selectLayer;
 let selectType;
-let typeIsItem;
 let selectMaterial;
 let selectProperty;
 let selectTool;
@@ -97,6 +96,8 @@ function draw() {
     update();
   }
 
+  player.showInventory();
+
   //Show builder cursor
   if (builder.isActive) {
     builder.showCursor();
@@ -104,13 +105,12 @@ function draw() {
 
 }
 
+///***UPDATE***///
 function update() {
 
   if (!builder.isActive){
     pendingUpdate = false;
   }
-
-
 
   //Clear screen
   background(0);
@@ -145,8 +145,98 @@ function update() {
 
   //Show player behind front layer
   typewriter.type('@', player.x, player.y, color(colPlyr[0], colPlyr[0], colPlyr[0], 96));
+}
 
-  player.showInventory();
+///***MOUSE AND KEYBOARD***///
+function mousePressed() {
+
+  //If mouse is outside the map, dismiss click
+  if (mouseX < FONT_W || mouseX > width - FONT_W || mouseY < FONT_H || mouseY > (MAP_H + 1) * FONT_H || !builder.isActive) {
+    return;
+  }
+  //TOOL: PLACE
+  if (builder.tool == "place" && builder.object.char != "") {
+
+    builder.place();
+
+    //TOOL: DEL
+  } else if (builder.tool == "del") {
+    for (let i = 0; i < builder.currentLayer.length; i++) {
+      if (
+        builder.cursorX == builder.currentLayer[i].x &&
+        builder.cursorY == builder.currentLayer[i].y
+      ) {
+        builder.currentLayer.splice(i, 1);
+      }
+    }
+
+    //TOOL: DELFROMTO / PLACEFROMTO
+  } else if (builder.tool == "delFromTo" || builder.tool == "placeFromTo") {
+    builder.sel1 = {
+      x: builder.cursorX,
+      y: builder.cursorY,
+    };
+    builder.dragSel2 = true;
+  }
+}
+
+function mouseReleased() {
+  builder.dragSel2 = false;
+}
+
+function keyPressed() {
+
+  let moveDir;
+
+  switch (keyCode) {
+    //Enter or leave  builder (B KEY)
+    case 66:
+      builder.isActive = !builder.isActive;
+      pendingUpdate = true;
+    //Apply or cancel tool selection (ESCAPE AND ENTER KEYS)
+    case ESCAPE:
+      builder.cancelTool();
+      return;
+    case ENTER:
+      if (player.isOnItem) {
+        player.selectOption();
+      } else if (player.isOnMenu) {
+        player.selectItem();
+      }
+      builder.applyTool();
+      return;
+    //Inventory (I KEY)
+    case 73:
+      player.isOnMenu = !player.isOnMenu;
+      player.isOnItem = false;
+      player.selectedOption = 0;
+      player.scrollMenu();
+      return;
+    //Move player
+    case LEFT_ARROW:
+      moveDir = 'l';
+      break;
+    case RIGHT_ARROW:
+      moveDir = 'r';
+      break;
+    case UP_ARROW:
+      moveDir = 'u';
+      break;
+    case DOWN_ARROW:
+      moveDir = 'd';
+      break;
+    default:
+      return;
+  }
+
+  //If player is on menu, then arrow keys select, else arrow keys move player
+  if (player.isOnMenu) {
+    player.scrollMenu(moveDir);
+  } else {
+    player.move(moveDir);
+    pendingUpdate = true;
+  }
+
 }
 
 ///***HTML ELEMENTS STUFF***///
@@ -163,12 +253,13 @@ function submitLayer() {
       break;
   }
 }
+
 function submitType() {
 
+  builder.object = new Obj();
+  builder.object.category = document.querySelector('#selectType option:checked').parentElement.label;
 
   emptySelect(selectMaterial);
-
-  typeIsItem = document.querySelector('#selectType option:checked').parentElement.label == "equipment";
 
   switch (selectType.value) {
     case "wall":
@@ -191,138 +282,61 @@ function submitType() {
       addOptionToSelect(selectMaterial, 'golden');
       break;
     default:
-      if (typeIsItem) {
+      if (builder.object.category == "equipment") {
+
+        builder.object = new Item();
+        builder.object.category = document.querySelector('#selectType option:checked').parentElement.label;
+
         addOptionToSelect(selectMaterial, 'wooden');
         addOptionToSelect(selectMaterial, 'stone');
         addOptionToSelect(selectMaterial, 'tin');
         addOptionToSelect(selectMaterial, 'golden');
-        builder.object.changeType(selectType.value);
-        submitMaterial();
-        return;
       }
       break;
   }
   builder.object.changeType(selectType.value);
   submitMaterial();
 }
+
 function submitMaterial() {
   builder.object.changeMaterial(selectMaterial.value);
 }
+
 function submitProperty() {
   builder.object.addProperty(selectProperty.value);
 }
+
 function submitTool() {
   builder.changeTool(selectTool.value);
 }
+
 function applyTool() {
   builder.toolAction(true);
 }
+
 function cancelTool() {
   builder.toolAction(false);
 }
+
 function emptySelect(element) {
   for (let i = 0; i < element.length; i++) {
     element.remove(i);
     i--;
   }
 }
+
 function addOptionToSelect(element, option) {
   let opt = document.createElement('option');
   opt.appendChild(document.createTextNode(option));
   opt.value = option;
   element.appendChild(opt);
 }
-function exportMap() {
-  let map = {
-    objs: objs,
-    items: items,
-    entities: entities,
-  };
-  saveJSON(map, "map.json");
-}
 
-///***MOUSE AND KEYBOARD***///
-function mousePressed() {
-
-  //If mouse is outside the map, dismiss click
-  if (mouseX < FONT_W || mouseX > width - FONT_W || mouseY < FONT_H || mouseY > (MAP_H + 1) * FONT_H || !builder.isActive) {
-    return;
-  }
-  //TOOL: PLACE
-  if (builder.tool == "place" && builder.object.char != "") {
-
-    builder.place();
-
-    //TOOL: DEL
-  } else if (builder.tool == "del") {
-    for (let i = 0; i < buildercurrentLayer.length; i++) {
-      if (
-        builder.cursorX == buildercurrentLayer[i].x &&
-        builder.cursorY == buildercurrentLayer[i].y
-      ) {
-        builder.currentLayer.splice(i, 1);
-      }
-    }
-
-    //TOOL: DELFROMTO / PLACEFROMTO
-  } else if (builder.tool == "delFromTo" || builder.tool == "placeFromTo") {
-    builder.sel1 = {
-      x: builder.cursorX,
-      y: builder.cursorY,
-    };
-    builder.dragSel2 = true;
-  }
-}
-function mouseReleased() {
-  builder.dragSel2 = false;
-}
-function keyPressed() {
-
-  let moveDir;
-
-  switch (keyCode) {
-    //Enter / leave  builder
-    case 66:
-      builder.isActive = !builder.isActive;
-      pendingUpdate = true;
-    //Apply or cancel tool selection
-    case ESCAPE:
-      cancelTool();
-      return;
-    case ENTER:
-      if (player.isOnInventory) {
-        player.selectItem();
-      }
-      applyTool();
-      return;
-    //Inventory
-    case 73:
-      player.isOnInventory = !player.isOnInventory;
-      player.selectedItem = 0;
-      player.changeSelectedItem();
-      return;
-    //Move player
-    case LEFT_ARROW:
-      moveDir = 'l';
-      break;
-    case RIGHT_ARROW:
-      moveDir = 'r';
-      break;
-    case UP_ARROW:
-      moveDir = 'u';
-      break;
-    case DOWN_ARROW:
-      moveDir = 'd';
-      break;
-    default:
-      return;
-  }
-
-  if (player.isOnInventory) {
-    player.changeSelectedItem(moveDir);
-  } else {
-    player.moveAndCollide(moveDir);
-    pendingUpdate = true;
-  }
-
-}
+// function exportMap() {
+//   let map = {
+//     objs: objs,
+//     items: items,
+//     entities: entities,
+//   };
+//   saveJSON(map, "map.json");
+// }
