@@ -33,9 +33,9 @@ class Structure {
 
 class Tree extends Structure {
 
-  constructor(x,y,wood,leaves) {
+  constructor(x,y,log,leaves) {
     super(x,y);
-    this.wood = wood;
+    this.log = log;
     this.leaves = leaves;
     this.height = floor(random(4));
     this.height = 4;
@@ -50,25 +50,37 @@ class Tree extends Structure {
       this.addLog(this.x, this.y-i-1, 'front');
     }
 
-    let logsInFront = this.layers['front'].length;
-
-    for (let i = 0; i < logsInFront; i++) {
-      if (this.layers['front'][i]) {
-        
-        let log = this.layers['front'][i];
-        let x = log.x;
-        let y = log.y;
-        if (y < this.y-this.height+2) {
-          //this.addLeaves(x-1,y+1,layer);
-          this.addLeaves(x-1,y);
+    for (let y = 0; y < MAP_H; y++) {
+      for (let x = 0; x < MAP_W; x++) {
+        let i = (y*MAP_W)+x;
+        if (this.layers['front'][i]== 'log_'+this.log && y < this.y-this.height+2) {
+          //this.addLeaves(x-1,y+1);
+          this.addLeaves(x-1,y);  
           this.addLeaves(x-1,y-1);
           this.addLeaves(x,y-1);
           this.addLeaves(x+1,y-1);
           this.addLeaves(x+1,y);
-          //this.addLeaves(x+1,y+1,layer);
+          //this.addLeaves(x+1,y+1);
         }
       }
     }
+
+    // for (let i = 0; i < this.layers['front'].length; i++) {
+    //   if (this.layers['front'][i]) {
+    //     let x = i%MAP_W;
+    //     let y = i/MAP_W;
+    //     if (y < this.y-this.height+1) {
+    //       //this.addLeaves(x-1,y+1,layer);
+    //       // this.addLeaves(x-1,y);  
+    //       // this.addLeaves(x-1,y-1);
+    //       this.addLeaves(x,y-1);
+    //       // this.addLeaves(x+1,y-1);
+    //       // this.addLeaves(x+1,y);
+    //       //this.addLeaves(x+1,y+1,layer);
+    //       print("LEAVES");
+    //     }
+    //   }
+    // }
   }
 
   addLog(x,y,layer) {
@@ -76,20 +88,9 @@ class Tree extends Structure {
     let index = (y*MAP_W)+x;
 
     if (this.layers[layer].length == 0) {
-      this.layers[layer][index] = 'log_'+this.wood;
-    } else {
-      let isEmpty = true;
-      for (let i = 0; i < this.layers[layer].length; i++) {
-        if (this.layers[layer][i]) {
-          let log = this.layers[layer][i];
-          if (log.x == x && log.y == y) {
-            isEmpty = false;
-          }
-        }
-      }
-      if (isEmpty) {
-        this.layers[layer][index] = 'log_'+this.wood;
-      }
+      this.layers[layer][index] = 'log_'+this.log;
+    } else if (!this.layers[layer][index]) {
+      this.layers[layer][index] = 'log_'+this.log;
     }
 
     let rng = floor(random(2));
@@ -123,21 +124,13 @@ class Tree extends Structure {
 
     let index = (y*MAP_W)+x;
 
-    let rng = floor(random(3));
+    let rng = floor(random(4));
     if (rng == 0) {
       return;
     }
 
-    let isEmpty = true;
-    for (let i = 0; i < this.layers[layer].length; i++) {
-      let log = this.layers[layer][i];
-      if (log.x == x && log.y == y) {
-        isEmpty = false;
-      }
-    }
-    if (isEmpty) {
-      this.layers['front'][index] = 'leaves_green';
-      
+    if (!this.layers['front'][index]) {
+      this.layers['front'][index] = 'leaves_'+this.leaves;
     }
   }
 
