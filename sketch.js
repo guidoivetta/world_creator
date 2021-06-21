@@ -1,30 +1,72 @@
 ///***GLOBAL CONSTANTS***///
 const FONT_W = 9;
 const FONT_H = 12;
-const MAP_W = 49;
-const MAP_H = 21;
+const MAP_W = 48;
+const MAP_H = 24;
 
 ///***GLOBAL VARIABLES***///
 
-//Font and colors
+//Font
 let font;
-let colors;
-
-//Engine
-let typewriter;
-let pendingUpdate;
-let builder;
-//let mapJSON;
 
 //Map
-let objs = {
-  back: [],
-  middle: [],
-  front: []
+let layers = {
+  'back': [],
+  'middle': [],
+  'front': []
 };
+let terrain = [];
+let structures = [];
 let items = [];
 let entities = [];
-let player;
+let player = {
+  pos: {
+    x: 0,
+    y: 0
+  },
+  speed: 1,
+  facing: 'e',
+  moveAndCollide: function() {
+    //Calculate target posiiton
+    let targetPos = {
+      x: player.pos.x + player.vel.x,
+      y: player.pos.y + player.vel.y
+    }
+
+    let targetTileName = layers['middle'][(targetPos.y*MAP_W)+targetPos.x];
+    let targetTile = '';
+    if (targetTileName) {
+      for (let i = 0; i < targetTileName.length; i++) {
+        if (targetTileName[i] == '_') {
+          break;
+        }
+        targetTile += targetTileName[i];
+      }
+      if (tiles[targetTile].isCollidable) {
+        return;
+      }
+    }
+
+    player.pos.x = targetPos.x;
+    player.pos.y = targetPos.y;
+  }
+};
+
+//Dictionaries
+let colDict;
+let textures;
+let hardnessDict = {
+  'oak': 10,
+  'wooden': 10,
+  'stone': 20,
+  'tin': 30,
+  'golden': 40
+};
+let tiles = {
+  'log': {
+    isCollidable: true
+  }
+};
 
 //HTML
 let selectLayer;
@@ -38,8 +80,19 @@ let buttonExport;
 function preload() {
 
   //Load font
-  font = loadFont("assets/codepage437.ttf");
-  //mapJSON = loadJSON("assets/map.json");
+  font = loadFont('assets/codepage437.ttf');
+
+  //Load textures
+  textures = {
+    'entity_player': loadImage('assets/textures/entity/player.png'),
+    'log_oak': loadImage('assets/textures/log/oak.png'),
+    'leaves_green': loadImage('assets/textures/leaves/green.png'),
+    'wall_stone': '█',
+    'soil_dirt': loadImage('assets/textures/soil/dirt.png'),
+    'chest': '■',
+    'tools': '*'
+  };
+  //mapJSON = loadJSON('assets/map.json');
 }
 
 ///***SETUP***///
@@ -48,9 +101,10 @@ function setup() {
   //Set up font
   textFont(font);
   textSize(16);
-  colors = {
+  colDict = {
     error: color(255, 0, 0),
     wooden: color(72, 48, 24),
+    oak: color(202, 134, 66),
     stone: 128,
     tin: 192,
     golden: color(255, 210, 0),
@@ -58,31 +112,52 @@ function setup() {
     grass: color(32, 75, 32),
     sand: color(72, 72, 16),
     gravel: color(48, 48, 48),
-    leaves_normal: color(16, 128, 16),
+    leaves_green: color(16, 128, 16),
     leaves_autumn: color(212, 91, 18),
     leaves_dark: color(128, 80, 212)
   };
 
   //Get select elements
-  selectLayer = document.getElementById("selectLayer");
-  selectType = document.getElementById("selectType");
-  selectMaterial = document.getElementById("selectMaterial");
-  selectProperty = document.getElementById("selectProperty");
-  selectTool = document.getElementById("selectTool");
+  selectLayer = document.getElementById('selectLayer');
+  selectType = document.getElementById('selectType');
+  selectMaterial = document.getElementById('selectMaterial');
+  selectProperty = document.getElementById('selectProperty');
+  selectTool = document.getElementById('selectTool');
 
   //Create typewriter, builder and player
   typewriter = new Typewriter();
-  builder = new Builder();
-  player = new Player(0, 0);
-
-  submitLayer();
-  submitType();
 
   //Get button elements
-  buttonExport = document.getElementById("buttonExport");
+  buttonExport = document.getElementById('buttonExport');
 
-  //Set up canvas
-  createCanvas(FONT_W * (MAP_W + 2), FONT_H * round(MAP_H * 1.75));
+  //Set up canvas and style stuff
+  createCanvas(FONT_W * (MAP_W + 2), FONT_H * round(MAP_H * 1.5));
+  noSmooth();
+
+  //Add dirt to terrain
+  for (let x = 0; x < MAP_W; x++) {
+    for (let y = 0; y < MAP_H; y++) {
+      terrain.push('soil_dirt');
+    }
+  }
+
+  //Load terrain
+  for (let i = 0; i < terrain.length; i++) {
+    layers['back'].push(terrain[i]);
+  }
+  
+
+  //Spawn tree structures
+  for (let i = 0; i < 5; i++) {
+    let x = floor(random(MAP_W * 0.75) + MAP_W * 0.125);
+    let y = floor(random(MAP_H * 0.75) + MAP_H * 0.125);
+    structures.push(new Tree(x, y, 'oak', 'green'));
+  }
+
+  //Load structures 
+  for (let i = 0; i < structures.length; i++) {
+    structures[i].loadToMap();
+  }
 
   pendingUpdate = true;
 
@@ -92,15 +167,21 @@ function setup() {
 function draw() {
 
   //Draw map when updated
-  if (pendingUpdate) {
+  //if (pendingUpdate) {
+  if (true) {
     update();
   }
 
-  player.showInventory();
+  // player.showInventory();
 
   //Show builder cursor
-  if (builder.isActive) {
-    builder.showCursor();
+  // if (builder.isActive) {
+  //   builder.showCursor();
+  // }
+
+  //Print framerate
+  if (frameRate() < 100) {
+    //print(frameRate());
   }
 
 }
@@ -108,235 +189,114 @@ function draw() {
 ///***UPDATE***///
 function update() {
 
-  if (!builder.isActive){
-    pendingUpdate = false;
-  }
-
   //Clear screen
   background(0);
 
   //Draw map borders
   typewriter.drawScreenBorders();
 
-  //Show objs in the back
-  for (let i = 0; i < objs.back.length; i++) {
-    typewriter.type(objs.back[i].char, objs.back[i].x, objs.back[i].y, objs.back[i].col);
+  //Show stuff in the back
+  i = 0;
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
+      if (layers['back'][i]) {
+        image(textures[layers['back'][i]], (x+1)*FONT_W,(y+1)*FONT_H);
+      }
+      i++;
+    }
   }
 
-  //Show objs in the middle
-  for (let i = 0; i < objs.middle.length; i++) {
-    typewriter.type(objs.middle[i].char, objs.middle[i].x, objs.middle[i].y, objs.middle[i].col);
+  //Show stuff in the middle
+  i = 0;
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
+      if (layers['middle'][i]) {
+        image(textures[layers['middle'][i]], (x+1)*FONT_W,(y+1)*FONT_H);
+      }
+      i++;
+    }
   }
+
+  //Show stuff in the middle
+  // for (let i = 0; i < layers['middle'].length; i++) {
+  //   let obj = layers['middle'][i];
+  //   if (obj.wearage >= 100) {
+  //     obj.break(i,'middle');
+  //     i--;
+  //   } else {
+  //     typewriter.type(obj.char, obj.x, obj.y, obj.col);
+  //   }
+  // }
 
   //Show items
   for (let i = 0; i < items.length; i++) {
-    typewriter.type(items[i].char, items[i].x, items[i].y, items[i].col);
+    let item = items[i];
+    typewriter.type(item.char, item.x, item.y);
   }
 
   //Show player
-  typewriter.type('@', player.x, player.y, player.col);
+  image(textures['entity_player'], (player.pos.x+1)*FONT_W+1,(player.pos.y+1)*FONT_H-2);
 
-  //Show objs in the front
-  for (let i = 0; i < objs.front.length; i++) {
-    typewriter.type(objs.front[i].char, objs.front[i].x, objs.front[i].y, objs.front[i].col);
+  //Show stuff in the front
+  i = 0;
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
+      if (layers['front'][i]) {
+        image(textures[layers['front'][i]], (x+1)*FONT_W,(y+1)*FONT_H);
+      }
+      i++;
+    }
   }
 
-  let colPlyr = player.col.levels;
-
-  //Show player behind front layer
-  typewriter.type('@', player.x, player.y, color(colPlyr[0], colPlyr[0], colPlyr[0], 96));
+  //Show stuff in the front
+  // for (let i = 0; i < layers['front'].length; i++) {
+  //   typewriter.type(layers['front'][i].char, layers['front'][i].x, layers['front'][i].y, layers['front'][i].col);
+  // }
+  
 }
 
 ///***MOUSE AND KEYBOARD***///
-function mousePressed() {
-
-  //If mouse is outside the map, dismiss click
-  if (mouseX < FONT_W || mouseX > width - FONT_W || mouseY < FONT_H || mouseY > (MAP_H + 1) * FONT_H || !builder.isActive) {
-    return;
-  }
-  //TOOL: PLACE
-  if (builder.tool == "place" && builder.object.char != "") {
-
-    builder.place();
-
-    //TOOL: DEL
-  } else if (builder.tool == "del") {
-    for (let i = 0; i < builder.currentLayer.length; i++) {
-      if (
-        builder.cursorX == builder.currentLayer[i].x &&
-        builder.cursorY == builder.currentLayer[i].y
-      ) {
-        builder.currentLayer.splice(i, 1);
-      }
-    }
-
-    //TOOL: DELFROMTO / PLACEFROMTO
-  } else if (builder.tool == "delFromTo" || builder.tool == "placeFromTo") {
-    builder.sel1 = {
-      x: builder.cursorX,
-      y: builder.cursorY,
-    };
-    builder.dragSel2 = true;
-  }
-}
-
-function mouseReleased() {
-  builder.dragSel2 = false;
-}
-
 function keyPressed() {
 
-  let moveDir;
-
-  switch (keyCode) {
-    //Enter or leave  builder (B KEY)
-    case 66:
-      builder.isActive = !builder.isActive;
-      pendingUpdate = true;
-    //Apply or cancel tool selection (ESCAPE AND ENTER KEYS)
-    case ESCAPE:
-      builder.cancelTool();
-      return;
-    case ENTER:
-      if (player.isOnItem) {
-        player.selectOption();
-      } else if (player.isOnMenu) {
-        player.selectItem();
-      }
-      builder.applyTool();
-      return;
-    //Inventory (I KEY)
-    case 73:
-      player.isOnMenu = !player.isOnMenu;
-      player.isOnItem = false;
-      player.selectedOption = 0;
-      player.scrollMenu();
-      return;
-    //Move player
-    case LEFT_ARROW:
-      moveDir = 'l';
-      break;
-    case RIGHT_ARROW:
-      moveDir = 'r';
-      break;
-    case UP_ARROW:
-      moveDir = 'u';
-      break;
-    case DOWN_ARROW:
-      moveDir = 'd';
-      break;
-    default:
-      return;
+  //According to pressed arrow:
+  //-Reset and add velocity
+  //-Update facing direction
+  //-Move and collide
+  if (keyCode === LEFT_ARROW) {
+    player.vel = {
+      x: 0,
+      y: 0
+    }
+    player.vel.x = -1;
+    player.facing = 'w';
+    player.moveAndCollide();
   }
-
-  //If player is on menu, then arrow keys select, else arrow keys move player
-  if (player.isOnMenu) {
-    player.scrollMenu(moveDir);
-  } else {
-    player.move(moveDir);
-    pendingUpdate = true;
+  if (keyCode === RIGHT_ARROW) {
+    player.vel = {
+      x: 0,
+      y: 0
+    }
+    player.vel.x = 1;
+    player.facing = 'e';
+    player.moveAndCollide();
+  }
+  if (keyCode === UP_ARROW) {
+    player.vel = {
+      x: 0,
+      y: 0
+    }
+    player.vel.y = -1;
+    player.facing = 'n';
+    player.moveAndCollide();
+  }
+  if (keyCode === DOWN_ARROW) {
+    player.vel = {
+      x: 0,
+      y: 0
+    }
+    player.vel.y = 1;
+    player.facing = 's';
+    player.moveAndCollide();
   }
 
 }
-
-///***HTML ELEMENTS STUFF***///
-function submitLayer() {
-  switch (selectLayer.value) {
-    case "back":
-      builder.currentLayer = objs.back;
-      break;
-    case "middle":
-      builder.currentLayer = objs.middle;
-      break;
-    case "front":
-      builder.currentLayer = objs.front;
-      break;
-  }
-}
-
-function submitType() {
-
-  builder.object = new Obj();
-  builder.object.category = document.querySelector('#selectType option:checked').parentElement.label;
-
-  emptySelect(selectMaterial);
-
-  switch (selectType.value) {
-    case "wall":
-      addOptionToSelect(selectMaterial, 'stone');
-      addOptionToSelect(selectMaterial, 'wooden');
-      break;
-    case "soil":
-      addOptionToSelect(selectMaterial, 'dirt');
-      addOptionToSelect(selectMaterial, 'grass');
-      addOptionToSelect(selectMaterial, 'sand');
-      addOptionToSelect(selectMaterial, 'gravel');
-      break;
-    case "leaves":
-      addOptionToSelect(selectMaterial, 'leaves_normal');
-      addOptionToSelect(selectMaterial, 'leaves_autumn');
-      addOptionToSelect(selectMaterial, 'leaves_dark');
-      break;
-    case "chest":
-      addOptionToSelect(selectMaterial, 'wooden');
-      addOptionToSelect(selectMaterial, 'golden');
-      break;
-    default:
-      if (builder.object.category == "equipment") {
-
-        builder.object = new Item();
-        builder.object.category = document.querySelector('#selectType option:checked').parentElement.label;
-
-        addOptionToSelect(selectMaterial, 'wooden');
-        addOptionToSelect(selectMaterial, 'stone');
-        addOptionToSelect(selectMaterial, 'tin');
-        addOptionToSelect(selectMaterial, 'golden');
-      }
-      break;
-  }
-  builder.object.changeType(selectType.value);
-  submitMaterial();
-}
-
-function submitMaterial() {
-  builder.object.changeMaterial(selectMaterial.value);
-}
-
-function submitProperty() {
-  builder.object.addProperty(selectProperty.value);
-}
-
-function submitTool() {
-  builder.changeTool(selectTool.value);
-}
-
-function applyTool() {
-  builder.toolAction(true);
-}
-
-function cancelTool() {
-  builder.toolAction(false);
-}
-
-function emptySelect(element) {
-  for (let i = 0; i < element.length; i++) {
-    element.remove(i);
-    i--;
-  }
-}
-
-function addOptionToSelect(element, option) {
-  let opt = document.createElement('option');
-  opt.appendChild(document.createTextNode(option));
-  opt.value = option;
-  element.appendChild(opt);
-}
-
-// function exportMap() {
-//   let map = {
-//     objs: objs,
-//     items: items,
-//     entities: entities,
-//   };
-//   saveJSON(map, "map.json");
-// }

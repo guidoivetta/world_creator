@@ -39,54 +39,11 @@
   <script src="../addons/p5.sound.js"></script>
   <script src="sketch.js"></script>
   <script src="Typewriter.js"></script>
-  <script src="Builder.js"></script>
   <script src="Player.js"></script>
-  <script src="Obj.js"></script>
-  <script src="Item.js"></script>
+  <script src="Structures.js"></script>
 </head>
 
 <body>
-  <main>
-  </main>
-  <hr>
-  layer:
-  <select id="selectLayer" onchange="submitLayer()">
-    <option value="back">back</option>
-    <option value="middle">middle</option>
-    <option value="front">front</option>
-  </select>
-  <br>
-  type:
-  <select id="selectType" onchange="submitType()">
-    <optgroup label="objects">
-      <option value="wall">wall</option>
-      <option value="soil">soil</option>
-      <option value="leaves">leaves</option>
-      <option value="liquid">liquid</option>
-      <option value="chest">chest</option>
-    </optgroup>
-    <optgroup label="equipment">
-      <option value="pickaxe">pickaxe</option>
-      <option value="axe">axe</option>
-    </optgroup>
-    <optgroup label="entities">
-      <option value=""></option>
-    </optgroup>
-  </select>
-  material:
-  <select id="selectMaterial" onchange="submitMaterial()"></select>
-  initial property:
-  <select id="selectProperty" onchange="submitProperty()"></select>
-  <br>
-  tool:
-  <select id="selectTool" onchange="submitTool()">
-    <option value="place">place</option>
-    <option value="placeFromTo">placeFromTo</option>
-    <option value="del">del</option>
-    <option value="delFromTo">delFromTo</option>
-  </select>
-  <br>
-  <button id="buttonExport" onclick="exportMap()">export</button>
 </body>
 
 </html>
