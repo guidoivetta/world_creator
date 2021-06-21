@@ -49,13 +49,26 @@ let player = {
 
     player.pos.x = targetPos.x;
     player.pos.y = targetPos.y;
+
+    if (player.pos.x < 0) {
+      player.pos.x = 0;
+    }
+    if (player.pos.x > MAP_W-1) {
+      player.pos.x = MAP_W-1;
+    }
+    if (player.pos.y < 0) {
+      player.pos.y = 0;
+    }
+    if (player.pos.y > MAP_H-1) {
+      player.pos.y = MAP_H-1;
+    }
   }
 };
 
 //Dictionaries
 let colDict;
 let textures;
-let hardnessDict = {
+let hardness = {
   'oak': 10,
   'wooden': 10,
   'stone': 20,
@@ -117,18 +130,8 @@ function setup() {
     leaves_dark: color(128, 80, 212)
   };
 
-  //Get select elements
-  selectLayer = document.getElementById('selectLayer');
-  selectType = document.getElementById('selectType');
-  selectMaterial = document.getElementById('selectMaterial');
-  selectProperty = document.getElementById('selectProperty');
-  selectTool = document.getElementById('selectTool');
-
   //Create typewriter, builder and player
   typewriter = new Typewriter();
-
-  //Get button elements
-  buttonExport = document.getElementById('buttonExport');
 
   //Set up canvas and style stuff
   createCanvas(FONT_W * (MAP_W + 2), FONT_H * round(MAP_H * 1.5));
@@ -166,18 +169,7 @@ function setup() {
 ///***DRAW***///
 function draw() {
 
-  //Draw map when updated
-  //if (pendingUpdate) {
-  if (true) {
-    update();
-  }
-
-  // player.showInventory();
-
-  //Show builder cursor
-  // if (builder.isActive) {
-  //   builder.showCursor();
-  // }
+  update();
 
   //Print framerate
   if (frameRate() < 100) {
@@ -217,17 +209,6 @@ function update() {
     }
   }
 
-  //Show stuff in the middle
-  // for (let i = 0; i < layers['middle'].length; i++) {
-  //   let obj = layers['middle'][i];
-  //   if (obj.wearage >= 100) {
-  //     obj.break(i,'middle');
-  //     i--;
-  //   } else {
-  //     typewriter.type(obj.char, obj.x, obj.y, obj.col);
-  //   }
-  // }
-
   //Show items
   for (let i = 0; i < items.length; i++) {
     let item = items[i];
@@ -247,11 +228,6 @@ function update() {
       i++;
     }
   }
-
-  //Show stuff in the front
-  // for (let i = 0; i < layers['front'].length; i++) {
-  //   typewriter.type(layers['front'][i].char, layers['front'][i].x, layers['front'][i].y, layers['front'][i].col);
-  // }
   
 }
 
@@ -261,7 +237,7 @@ function keyPressed() {
   //According to pressed arrow:
   //-Reset and add velocity
   //-Update facing direction
-  //-Move and collide
+  //-Move and collide player
   if (keyCode === LEFT_ARROW) {
     player.vel = {
       x: 0,
