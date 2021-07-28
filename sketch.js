@@ -179,6 +179,9 @@ let cam = {
   }
 };
 
+//Debug suff
+let printSmth = false;
+
 
 ///***PRELOAD***///
 function preload() {
@@ -226,7 +229,7 @@ function setup() {
   //Create typewriter
   typewriter = new Typewriter();
 
-  //Add dirt to terrain
+  //Generate terrain (full map filled with dirt)
   for (let y = 0; y < MAP_H; y++) {
     for (let x = 0; x < MAP_W; x++) {
       terrain.push('soil_dirt');
@@ -238,7 +241,7 @@ function setup() {
     layers['back'].push(terrain[i]);
   }
   
-  //Spawn tree structures
+  //Generate tree structures
   for (let i = 0; i < 5; i++) {
     let x = floor(random(MAP_W * 0.75) + (MAP_W*0.125));
     let y = floor(random(MAP_H * 0.75) + (MAP_H*0.125));
@@ -267,51 +270,42 @@ function draw() {
 
   //Draw map borders
   typewriter.drawScreenBorders();
-
+  
   //Show stuff in the back
-  i = 0;
-  for (let y = 0; y < MAP_H; y++) {
-    for (let x = 0; x < MAP_W; x++) {
-      if (layers['back'][i] && x-cam.x >= 0 && x-cam.x < VIEWPORT_W && y-cam.y >= 0 && y-cam.y < VIEWPORT_H) {
+  for (let y = cam.y; y < VIEWPORT_H+cam.y; y++) {
+    for (let x = cam.x; x < VIEWPORT_W+cam.x; x++) {
+      let i = (y*MAP_W)+x;
+      if (textures[layers['back'][i]]) {
         image(textures[layers['back'][i]], (x+1-cam.x)*FONT_W, (y+1-cam.y)*FONT_H);
       }
-      i++;
     }
   }
-
+  
   //Show stuff in the middle
-  i = 0;
-  for (let y = 0; y < MAP_H; y++) {
-    for (let x = 0; x < MAP_W; x++) {
-      if (layers['middle'][i] && x-cam.x >= 0 && x-cam.x < VIEWPORT_W && y-cam.y >= 0 && y-cam.y < VIEWPORT_H) {
+  for (let y = cam.y; y < VIEWPORT_H+cam.y; y++) {
+    for (let x = cam.x; x < VIEWPORT_W+cam.x; x++) {
+      let i = (y*MAP_W)+x;
+      if (textures[layers['middle'][i]]) {
         image(textures[layers['middle'][i]], (x+1-cam.x)*FONT_W, (y+1-cam.y)*FONT_H);
       }
-      i++;
     }
-  }
-
-  //Show items
-  for (let i = 0; i < items.length; i++) {
-    let item = items[i];
-    typewriter.type(item.char, item.x, item.y);
   }
 
   //Show player
-  image(textures['entity_player'], (player.pos.x+1-cam.x)*FONT_W+1, (player.pos.y+1-cam.y)*FONT_H-2);
+  image(textures['entity_player'], (player.pos.x+1-cam.x)*FONT_W, (player.pos.y+1-cam.y)*FONT_H);
 
   //Show stuff in the front
-  i = 0;
-  for (let y = 0; y < MAP_H; y++) {
-    for (let x = 0; x < MAP_W; x++) {
-      if (layers['front'][i] && x-cam.x >= 0 && x-cam.x < VIEWPORT_W && y-cam.y >= 0 && y-cam.y < VIEWPORT_H) {
+  for (let y = cam.y; y < VIEWPORT_H+cam.y; y++) {
+    for (let x = cam.x; x < VIEWPORT_W+cam.x; x++) {
+      let i = (y*MAP_W)+x;
+      if (textures[layers['front'][i]]) {
         image(textures[layers['front'][i]], (x+1-cam.x)*FONT_W, (y+1-cam.y)*FONT_H);
       }
-      i++;
     }
   }
 
   //Show player behind front tiles
-  image(textures['entity_player_alpha'], (player.pos.x+1-cam.x)*FONT_W+1, (player.pos.y+1-cam.y)*FONT_H-2);
+  image(textures['entity_player_alpha'], (player.pos.x+1-cam.x)*FONT_W, (player.pos.y+1-cam.y)*FONT_H);
 
   //Print framerate constantly
   if (frameRate() < 100) {
@@ -365,6 +359,7 @@ function keyPressed() {
   }
   if (keyCode == 113) { //F2 key
     print(frameRate());
+    //printSmth = true;
   }
 
 }
