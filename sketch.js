@@ -6,12 +6,12 @@ const MAP_H = 48;
 const VIEWPORT_W = 48;
 const VIEWPORT_H = 24;
 
-///***GLOBAL VARIABLES***///
+///***GLOBAL CONSTANTS***///
 
-//Font
+//Fonts
 let font;
 
-//Map
+//World
 let layers = {
   'back': [],
   'middle': [],
@@ -21,12 +21,13 @@ let layers = {
     'back': [],
     'middle': [],
     'front': []
-  }
+  },
+
+  'items': [],
+  'entities': []
 };
 let terrain = [];
 let structures = [];
-// let items = [];
-// let entities = [];
 
 //Dictionaries
 let colDict;
@@ -34,8 +35,33 @@ let textures;
 let tiles = {
   'log': {
     isCollidable: true,
-    type: 'breakable',
+    isBreakable: true,
+    state: 'solid',
     material: 'wooden',
+    update: function(index) {
+      if (layers.updateable['middle'][index].wear >= 100) {
+        layers.updateable['middle'][index] = null;
+        layers['middle'][index] = null;
+      }
+    }
+  },
+  'fence': {
+    isCollidable: true,
+    isBreakable: true,
+    state: 'solid',
+    material: 'wooden',
+    update: function(index) {
+      if (layers.updateable['middle'][index].wear >= 100) {
+        layers.updateable['middle'][index] = null;
+        layers['middle'][index] = null;
+      }
+    }
+  },
+  'limestone': {
+    isCollidable: true,
+    isBreakable: true,
+    state: 'solid',
+    material: 'rock',
     update: function(index) {
       if (layers.updateable['middle'][index].wear >= 100) {
         layers.updateable['middle'][index] = null;
@@ -45,7 +71,16 @@ let tiles = {
   },
   'water': {
     isCollidable: false,
-    type: 'liquid'
+    isBreakable: false,
+    state: 'liquid',
+    viscosity: 0,
+    depth: 100,
+    update: function(index) {
+      
+    },
+    'update_liquid': function() {
+      //Spread out in relation to viscosity
+    }
   }
 
 };
@@ -64,24 +99,57 @@ let player = {
     x: 0,
     y: 0
   },
+  vel: {
+    x: 0,
+    y: 0
+  },
   speed: 1,
   facing: 'e',
   inventory: [],
+  texture: 'player',
 
-  moveAndCollide: function() {
+  moveAndCollide: function(dir) {
+
+    //Reset velocity
+    this.vel = {
+      x: 0,
+      y: 0
+    }
+
+    //Set velocity and facing direction according to pressed key
+    switch (dir) {
+      case LEFT_ARROW:
+        this.vel.x = -1;
+        this.facing = 'w';
+        break;
+      case RIGHT_ARROW:
+        this.vel.x = 1;
+        this.facing = 'e';
+        break;
+      case UP_ARROW:
+        this.vel.y = -1;
+        this.facing = 'n';
+        break;
+      case DOWN_ARROW:
+        this.vel.y = 1;
+        this.facing = 's';
+        break;
+      default:
+        return;
+    }
     //Calculate target posiiton
     let targetPos = {
       x: this.pos.x + this.vel.x,
       y: this.pos.y + this.vel.y
     }
     
-    //Get target tile full name (type_material)
+    //Get target tile full name ('type_material')
     let targetTileIndex = (targetPos.y*MAP_W)+targetPos.x;
     let targetTileName = layers['middle'][targetTileIndex];
 
     //If it exists
     if (targetTileName) {
-      //Get target tile (type)
+      //Get target tile (only the bit before the underscore)
       let targetTile = '';
       for (let i = 0; i < targetTileName.length; i++) {
         if (targetTileName[i] == '_') {
@@ -119,10 +187,11 @@ let player = {
   },
 
   collideWith: function(tile, index) {
+
     //Initialize updateable tile if there isn't one yet
     if (!layers.updateable['middle'][index]) {
-      switch (tiles[tile].type) {
-        case 'breakable':
+      switch (tiles[tile].isBreakable) {
+        case true:
           print('collided for the first time');
           layers.updateable['middle'][index] = {
             wear: 0
@@ -133,22 +202,23 @@ let player = {
           break;
       }
     }
-    switch (tiles[tile].type) {
-      case 'breakable':
-        if (player.tool.type == 'axe' && (tile == 'log' || tile == 'wooden')) {
-          layers.updateable['middle'][index].wear += (materials[player.tool.material].hardness*2) - materials[tiles[tile].material].hardness;
-        }
-        layers.updateable['middle'][index].wear += 10;
-        print('collider is breakable and its wear is '+layers.updateable['middle'][index].wear);
-        break;
-      case 'liquid':
-        print('collider is liquid');
-        break;
-    }
+    // switch (tiles[tile].type) {
+    //   case 'breakable':
+    //     if (player.tool.type == 'axe' && (tile == 'log' || tile == 'wooden')) {
+    //       layers.updateable['middle'][index].wear += (materials[player.tool.material].hardness*2) - materials[tiles[tile].material].hardness;
+    //     }
+    //     layers.updateable['middle'][index].wear += 10;
+    //     print('collider is breakable and its wear is '+layers.updateable['middle'][index].wear);
+    //     break;
+    //   case 'liquid':
+    //     print('collider is liquid');
+    //     break;
+    // }
     
     tiles[tile].update(index);
   }
 };
+layers['entities'].push(player);
 
 //Cam
 let cam = {
@@ -268,44 +338,12 @@ function draw() {
   //Clear screen
   background(0);
 
-  //Draw map borders
-  typewriter.drawScreenBorders();
-  
-  //Show stuff in the back
-  for (let y = cam.y; y < VIEWPORT_H+cam.y; y++) {
-    for (let x = cam.x; x < VIEWPORT_W+cam.x; x++) {
-      let i = (y*MAP_W)+x;
-      if (textures[layers['back'][i]]) {
-        image(textures[layers['back'][i]], (x+1-cam.x)*FONT_W, (y+1-cam.y)*FONT_H);
-      }
-    }
-  }
-  
-  //Show stuff in the middle
-  for (let y = cam.y; y < VIEWPORT_H+cam.y; y++) {
-    for (let x = cam.x; x < VIEWPORT_W+cam.x; x++) {
-      let i = (y*MAP_W)+x;
-      if (textures[layers['middle'][i]]) {
-        image(textures[layers['middle'][i]], (x+1-cam.x)*FONT_W, (y+1-cam.y)*FONT_H);
-      }
-    }
-  }
+  //Draw viewport (tiles, items, entities, etc)
+  drawViewport();
 
-  //Show player
-  image(textures['entity_player'], (player.pos.x+1-cam.x)*FONT_W, (player.pos.y+1-cam.y)*FONT_H);
+  //Draw gui (borders, stats, menu, etc)
+  drawGui();
 
-  //Show stuff in the front
-  for (let y = cam.y; y < VIEWPORT_H+cam.y; y++) {
-    for (let x = cam.x; x < VIEWPORT_W+cam.x; x++) {
-      let i = (y*MAP_W)+x;
-      if (textures[layers['front'][i]]) {
-        image(textures[layers['front'][i]], (x+1-cam.x)*FONT_W, (y+1-cam.y)*FONT_H);
-      }
-    }
-  }
-
-  //Show player behind front tiles
-  image(textures['entity_player_alpha'], (player.pos.x+1-cam.x)*FONT_W, (player.pos.y+1-cam.y)*FONT_H);
 
   //Print framerate constantly
   if (frameRate() < 100) {
@@ -314,56 +352,52 @@ function draw() {
 
 }
 
+function drawViewport() {
+
+  //Draw back layer
+  typewriter.drawLayer('back');
+  
+  //Draw middle layer
+  typewriter.drawLayer('middle');
+
+  //Draw items
+
+
+  //Draw entities
+  typewriter.drawEntities();
+
+  //Draw front layer
+  typewriter.drawLayer('front');
+
+  //Draw player behind front tiles
+  //image(textures['entity_player_alpha'], (player.pos.x+1-cam.x)*FONT_W, (player.pos.y+1-cam.y)*FONT_H);
+  
+}
+
+function drawGui() {
+
+  //Draw viewport borders
+  typewriter.drawScreenBorders();
+
+  //Draw text
+  typewriter.type('hola',0,VIEWPORT_H+2);
+
+}
+
 ///***MOUSE AND KEYBOARD***///
 function keyPressed() {
 
-  //According to pressed arrow:
-  //-Reset and add velocity
-  //-Update facing direction
-  //-Move and collide player
-  if (keyCode === LEFT_ARROW) {
-    player.vel = {
-      x: 0,
-      y: 0
-    }
-    player.vel.x = -1;
-    player.facing = 'w';
-    player.moveAndCollide();
-  }
-  if (keyCode === RIGHT_ARROW) {
-    player.vel = {
-      x: 0,
-      y: 0
-    }
-    player.vel.x = 1;
-    player.facing = 'e';
-    player.moveAndCollide();
-  }
-  if (keyCode === UP_ARROW) {
-    player.vel = {
-      x: 0,
-      y: 0
-    }
-    player.vel.y = -1;
-    player.facing = 'n';
-    player.moveAndCollide();
-  }
-  if (keyCode === DOWN_ARROW) {
-    player.vel = {
-      x: 0,
-      y: 0
-    }
-    player.vel.y = 1;
-    player.facing = 's';
-    player.moveAndCollide();
-  }
+  //Move and collide player according to pressed key
+
+  player.moveAndCollide(keyCode);
+
   if (keyCode == 113) { //F2 key
-    print(frameRate());
-    //printSmth = true;
+    print('this is a debug message printed via F2 key');
   }
 
 }
 
+///***QSY***///
 function makeAlphaTexture(texture){
   textures[texture].loadPixels();
   let newTexture = texture+'_alpha';

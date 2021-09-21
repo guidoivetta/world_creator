@@ -135,3 +135,17 @@ class Tree extends Structure {
   }
 
 }
+
+class Boulder extends Structure {
+  
+  constructor(x,y,size) {
+    super(x,y);
+    this.size = size;
+    this.generate();
+  }
+
+  generate() {
+    
+  }
+
+}
