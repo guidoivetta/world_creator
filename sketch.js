@@ -1,6 +1,8 @@
 ///***GLOBAL CONSTANTS***///
-const FONT_W = 9;
-const FONT_H = 12;
+const GLOBALRESIZE = 2;
+const FONTSIZE = 16;
+const FONT_W = 9*GLOBALRESIZE;
+const FONT_H = 12*GLOBALRESIZE;
 const MAP_W = 96;
 const MAP_H = 48;
 const VIEWPORT_W = 48;
@@ -29,6 +31,9 @@ let layers = {
 let terrain = [];
 let structures = [];
 
+//GUI
+let navigation = 'main';
+
 //Dictionaries
 let colDict;
 let textures;
@@ -42,6 +47,9 @@ let tiles = {
       if (layers.updateable['middle'][index].wear >= 100) {
         layers.updateable['middle'][index] = null;
         layers['middle'][index] = null;
+        return 'broke';
+      } else {
+        return 'damaged';
       }
     }
   },
@@ -103,10 +111,23 @@ let player = {
     x: 0,
     y: 0
   },
+  stats: {
+    hp: 100
+  },
+  inventory: {
+    
+  },
+  equipped: {
+    head: [],
+    chest: [],
+    hands: [],
+    legs: [],
+    feet: []
+  },
   speed: 1,
   facing: 'e',
-  inventory: [],
   texture: 'player',
+  name: 'Oldman',
 
   moveAndCollide: function(dir) {
 
@@ -190,34 +211,43 @@ let player = {
 
     //Initialize updateable tile if there isn't one yet
     if (!layers.updateable['middle'][index]) {
-      switch (tiles[tile].isBreakable) {
-        case true:
-          print('collided for the first time');
-          layers.updateable['middle'][index] = {
-            wear: 0
-          }
-          break;
-        case 'collided for the first time and it is liquid':
-          print('is liquid');
-          break;
+      print('collided for the first time and added updateable tile for: '+tile);
+      layers.updateable['middle'][index] = {
+        tile: tile,
+        wear: 0
       }
     }
-    // switch (tiles[tile].type) {
-    //   case 'breakable':
-    //     if (player.tool.type == 'axe' && (tile == 'log' || tile == 'wooden')) {
-    //       layers.updateable['middle'][index].wear += (materials[player.tool.material].hardness*2) - materials[tiles[tile].material].hardness;
-    //     }
-    //     layers.updateable['middle'][index].wear += 10;
-    //     print('collider is breakable and its wear is '+layers.updateable['middle'][index].wear);
-    //     break;
-    //   case 'liquid':
-    //     print('collider is liquid');
-    //     break;
-    // }
+
+    //Search for (strongest of all available, still not implemented) tool
+    let tool;
+    for (let i = 0; i < player.inventory['hands'].length; i++) {
+      if (player.inventory.hands[i].isEquippable){
+        tool = player.inventory.hands[i];
+      }
+    }
+
+    //Wear tile if possible
+    let materialsCoef = materials[tool.material].hardness / materials[tiles[tile].material].hardness;
+
+    if (materialsCoef>=1) {
+      layers.updateable.middle[index].wear += materialsCoef*10;;
+    }
     
-    tiles[tile].update(index);
+    let updated = tiles[tile].update(index);
+
+    switch(updated) {
+      case 'broke':
+        console.log('you broke a '+tile);
+        break;
+      case 'damaged':
+        console.log('you damaged a '+tile+' with your '+tool.name);
+        break;
+    }
   }
 };
+
+player.equipped.hands.push(new Tool('old','wooden','axe'));
+
 layers['entities'].push(player);
 
 //Cam
@@ -249,9 +279,6 @@ let cam = {
   }
 };
 
-//Debug suff
-let printSmth = false;
-
 
 ///***PRELOAD***///
 function preload() {
@@ -277,7 +304,6 @@ function setup() {
 
   //Set up font
   textFont(font);
-  textSize(16);
   colDict = {
     error: color(255, 0, 0),
     wooden: color(72, 48, 24),
@@ -361,16 +387,16 @@ function drawViewport() {
   typewriter.drawLayer('middle');
 
   //Draw items
-
+  typewriter.drawItems();
 
   //Draw entities
-  typewriter.drawEntities();
+  typewriter.drawEntities('regular');
 
   //Draw front layer
   typewriter.drawLayer('front');
 
-  //Draw player behind front tiles
-  //image(textures['entity_player_alpha'], (player.pos.x+1-cam.x)*FONT_W, (player.pos.y+1-cam.y)*FONT_H);
+  //Draw entities behind tiles
+  typewriter.drawEntities('alpha');
   
 }
 
@@ -379,29 +405,72 @@ function drawGui() {
   //Draw viewport borders
   typewriter.drawScreenBorders();
 
-  //Draw text
-  typewriter.type('hola',0,VIEWPORT_H+2);
+  //Draw player name and stats
+  typewriter.type(player.name, VIEWPORT_W+3, 0, 1);
+  typewriter.type('HP: '+player.stats.hp, VIEWPORT_W+3, 1, 1);
+  for (let i = 0; i < width-VIEWPORT_W+3; i++) {
+    typewriter.type('-', VIEWPORT_W+3+i,3, GLOBALRESIZE);
+  }
 
+  switch(navigation) {
+    case 'main':
+      //Draw messages
+      typewriter.type('messages go here', VIEWPORT_W+3, 4, 1);
+      break;
+    case 'inventory':
+      //Draw inventory
+      drawInventory();
+      break;
+  }
+
+}
+
+function drawInventory(){
+  for (let i = 0; i < player.equipped.head.length; i++) {
+    typewriter.type(i+1+'. '+player.equipped.head[i].name+' (E)', VIEWPORT_W+3, i+4, 1);
+  }
+  for (let i = 0; i < player.equipped.chest.length; i++) {
+    typewriter.type(i+1+'. '+player.equipped.chest[i].name+' (E)', VIEWPORT_W+3, i+4+player.equipped.head.length, 1);
+  }
+  for (let i = 0; i < player.equipped.hands.length; i++) {
+    typewriter.type(i+1+'. '+player.equipped.hands[i].name+' (E)', VIEWPORT_W+3, i+4+player.equipped.chest.length, 1);
+  }
+  for (let i = 0; i < player.equipped.legs.length; i++) {
+    typewriter.type(i+1+'. '+player.equipped.legs[i].name+' (E)', VIEWPORT_W+3, i+4+player.equipped.legs.length, 1);
+  }
+  for (let i = 0; i < player.equipped.feet.length; i++) {
+    typewriter.type(i+1+'. '+player.equipped.feet[i].name+' (E)', VIEWPORT_W+3, i+4+player.equipped.feet.length, 1);
+  }
 }
 
 ///***MOUSE AND KEYBOARD***///
 function keyPressed() {
 
+  print(keyCode);
+
   //Move and collide player according to pressed key
 
   player.moveAndCollide(keyCode);
 
-  if (keyCode == 113) { //F2 key
-    print('this is a debug message printed via F2 key');
+  switch(keyCode) {
+    case 27: //ESC key
+      navigation = 'main';
+      break;
+    case 73: //i key
+      navigation = 'inventory';
+      break;
+    case 113: //F2 key
+      print('this is a debug message printed via F2 key');
+      break;
   }
 
 }
 
-///***QSY***///
+///***UTILITIES***///
 function makeAlphaTexture(texture){
   textures[texture].loadPixels();
   let newTexture = texture+'_alpha';
-  textures[newTexture] = createImage(FONT_W, FONT_H);
+  textures[newTexture] = createImage(textures[texture].width, textures[texture].height);
   textures[newTexture].loadPixels();
   for (let i = 0; i < textures[newTexture].pixels.length*0.25; i++) {
     if (textures[texture].pixels[(i*4)+3] == 255) {
